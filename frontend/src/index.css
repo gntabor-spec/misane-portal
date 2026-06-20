@@ -1,0 +1,24 @@
+/* Misane Properties — portal design tokens (navy / warm white / brass, Fraunces + Libre Franklin) */
+:root{
+  --navy:#0B1A48; --navy-text:#14224F; --brass:#B7843C; --gold:#D8A24E;
+  --paper:#FAF8F3; --greige:#F0EBE0; --card:#FFFFFF; --slate:#43474E; --slate2:#5C6068;
+  --hairline:#E0D9CC; --hairline-d:#CFC7B7; --green:#1F8A5B; --danger:#B4453A;
+  --display:'Fraunces',Georgia,serif; --body:'Libre Franklin',system-ui,sans-serif;
+  --radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);color:var(--slate);background:var(--paper);line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);color:var(--navy-text);font-weight:600;letter-spacing:-0.01em;line-height:1.1}
+a{color:var(--brass);text-decoration:none}
+input,select,textarea{font-family:var(--body);font-size:15px;padding:11px 13px;border:1px solid var(--hairline-d);border-radius:6px;width:100%;background:#fff}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--navy)}
+label{display:block;font-size:13px;font-weight:600;color:var(--navy-text);margin-bottom:6px}
+.btn{display:inline-block;font-family:var(--body);font-weight:600;font-size:14px;padding:11px 20px;border-radius:5px;border:none;cursor:pointer}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:#0d2058}
+.btn-gold{background:var(--gold);color:#241c08}
+.btn-line{background:transparent;color:var(--navy-text);border:1px solid var(--hairline-d)}
+.card{background:var(--card);border:1px solid var(--hairline-d);border-radius:var(--radius);padding:24px}
+.kicker{font-family:var(--body);font-weight:600;text-transform:uppercase;letter-spacing:.22em;font-size:11px;color:var(--brass)}
+.muted{color:var(--slate2);font-size:13px}
+.error{color:var(--danger);font-size:13px;margin-top:8px}
+.wrap{max-width:1080px;margin:0 auto;padding:24px}

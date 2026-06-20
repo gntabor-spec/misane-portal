@@ -1,0 +1,31 @@
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { useAuth } from './context/AuthContext.jsx'
+import Login from './pages/Login.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
+import ClientDashboard from './pages/ClientDashboard.jsx'
+
+function Home() {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  if (!user) return <Navigate to="/login" replace />
+  return <Navigate to={user.role === 'admin' ? '/admin' : '/portal'} replace />
+}
+
+function Require({ role, children }) {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  if (!user) return <Navigate to="/login" replace />
+  if (role && user.role !== role) return <Navigate to="/" replace />
+  return children
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/admin" element={<Require role="admin"><AdminDashboard /></Require>} />
+      <Route path="/portal" element={<Require role="client"><ClientDashboard /></Require>} />
+    </Routes>
+  )
+}

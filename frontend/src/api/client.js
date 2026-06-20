@@ -1,0 +1,26 @@
+const BASE = import.meta.env.VITE_API_BASE || ''
+
+function authHeaders() {
+  const t = localStorage.getItem('mp_token')
+  return t ? { Authorization: `Bearer ${t}` } : {}
+}
+
+async function req(path, opts = {}) {
+  const r = await fetch(BASE + path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(opts.headers || {}) },
+  })
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({ detail: r.statusText }))
+    throw new Error(e.detail || 'Request failed')
+  }
+  return r.status === 204 ? null : r.json()
+}
+
+export const api = {
+  login: (email, password) => req('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  me: () => req('/api/auth/me'),
+  listClients: () => req('/api/clients'),
+  createClient: (b) => req('/api/clients', { method: 'POST', body: JSON.stringify(b) }),
+  invite: (cid, email) => req(`/api/clients/${cid}/invite?email=${encodeURIComponent(email)}`, { method: 'POST' }),
+}

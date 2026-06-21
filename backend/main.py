@@ -3,10 +3,12 @@ Misane Properties — Client Portal API (FastAPI + SQLite)
 M1 foundation: JWT auth, User + Client models, admin client management.
 Later milestones add: intake, photo uploads, preview/approval, Stripe billing.
 """
-import os, sqlite3, datetime, json, secrets
+import os, sqlite3, datetime, json, secrets, smtplib, ssl
 from contextlib import closing
-from fastapi import FastAPI, Depends, HTTPException, status
+from email.message import EmailMessage
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from jose import jwt, JWTError
@@ -16,14 +18,28 @@ SECRET_KEY = os.environ.get("MISANE_SECRET", "change-me-in-.env")
 ALGO = "HS256"
 TOKEN_MINUTES = 480
 DB_PATH = os.environ.get("MISANE_DB", os.path.join(os.path.dirname(__file__), "misane.db"))
+UPLOAD_DIR = os.environ.get("MISANE_UPLOADS", os.path.join(os.path.dirname(__file__), "uploads"))
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# SMTP — Greg fills these in .env (domain mailbox, e.g. greg@misaneproperties.com)
+SMTP_HOST = os.environ.get("SMTP_HOST", "")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASS = os.environ.get("SMTP_PASS", "")
+SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USER or "no-reply@misaneproperties.com")
+ADMIN_EMAIL = os.environ.get("MISANE_ADMIN_EMAIL", "")
+
 app = FastAPI(title="Misane Portal API")
+# Auth is via Bearer token in the Authorization header (no cookies), so it's safe
+# to allow any origin — every property site can post the public contact form
+# without per-domain config, and the token still gates the protected routes.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get("MISANE_ORIGINS", "https://app.misaneproperties.com").split(","),
-    allow_credentials=True, allow_methods=["*"], allow_headers=["*"],
+    allow_origins=["*"], allow_credentials=False,
+    allow_methods=["*"], allow_headers=["*"],
 )
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # ---- db ----
 def db():
@@ -59,6 +75,22 @@ def init_db():
             plan_started TEXT,                    -- date the $500 was paid (sub anchor)
             plan_draft TEXT,                      -- marketing plan being edited (admin only)
             plan_published TEXT,                  -- marketing plan the client sees
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS submissions(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER NOT NULL,
+            author_email TEXT,
+            kind TEXT DEFAULT 'update',           -- 'update' | 'feedback'
+            message TEXT,
+            files_json TEXT,                      -- JSON array of uploaded file URLs
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS leads(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER,
+            domain TEXT,
+            name TEXT, email TEXT, phone TEXT, message TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
         """)
@@ -102,6 +134,45 @@ def require_admin(u=Depends(get_user)):
     if u["role"] != "admin":
         raise HTTPException(403, "Admin only")
     return u
+
+# ---- email + notifications ----
+def send_email(to, subject, body, reply_to=None):
+    recipients = [to] if isinstance(to, str) else list(to)
+    recipients = [r for r in dict.fromkeys(recipients) if r]   # dedupe, drop blanks
+    if not recipients or not SMTP_HOST:
+        print(f"[email skipped] {subject} -> {recipients}")
+        return False
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = SMTP_FROM
+    msg["To"] = ", ".join(recipients)
+    if reply_to:
+        msg["Reply-To"] = reply_to
+    msg.set_content(body)
+    try:
+        if SMTP_PORT == 465:
+            srv = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=20)
+        else:
+            srv = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20)
+            srv.starttls(context=ssl.create_default_context())
+        if SMTP_USER:
+            srv.login(SMTP_USER, SMTP_PASS)
+        srv.send_message(msg)
+        srv.quit()
+        return True
+    except Exception as e:
+        print(f"[email error] {e}")
+        return False
+
+def client_contact_emails(cid):
+    """Everyone who should hear about this client: all their logins + the client email field."""
+    with closing(db()) as c:
+        rows = c.execute("SELECT email FROM users WHERE client_id=?", (cid,)).fetchall()
+        cl = c.execute("SELECT email FROM clients WHERE id=?", (cid,)).fetchone()
+    emails = [r["email"] for r in rows]
+    if cl and cl["email"]:
+        emails.append(cl["email"])
+    return emails
 
 # ---- schemas ----
 class LoginIn(BaseModel):
@@ -215,14 +286,20 @@ def save_plan(cid: int, body: PlanIn, _=Depends(require_admin)):
     return {"ok": True}
 
 @app.post("/api/clients/{cid}/plan/publish")
-def publish_plan(cid: int, _=Depends(require_admin)):
-    """Publish the draft → becomes what the client sees."""
+def publish_plan(cid: int, background: BackgroundTasks, _=Depends(require_admin)):
+    """Publish the draft → becomes what the client sees, and notify the owner's contacts."""
     with closing(db()) as c:
-        r = c.execute("SELECT plan_draft FROM clients WHERE id=?", (cid,)).fetchone()
+        r = c.execute("SELECT plan_draft, name FROM clients WHERE id=?", (cid,)).fetchone()
         if not r:
             raise HTTPException(404, "Client not found")
         c.execute("UPDATE clients SET plan_published=? WHERE id=?", (r["plan_draft"], cid))
         c.commit()
+    recipients = client_contact_emails(cid)
+    if recipients:
+        login = os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com") + "/login"
+        body = (f"Good news — your Misane Properties marketing plan for {r['name']} has been "
+                f"updated and is ready to view.\n\nLog in to your portal: {login}\n\n— Misane Properties")
+        background.add_task(send_email, recipients, "Your marketing plan is ready to view", body)
     return {"ok": True}
 
 @app.post("/api/clients/{cid}/delete")
@@ -261,7 +338,101 @@ def invite_client(cid: int, email: EmailStr, _=Depends(require_admin)):
             c.commit()
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A login with that email already exists")
-    return {"email": email, "temp_password": temp}  # TODO M3: email this automatically
+    return {"email": email, "temp_password": temp,
+            "login_url": os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com") + "/login"}
+
+@app.get("/api/clients/{cid}/users")
+def list_client_users(cid: int, _=Depends(require_admin)):
+    with closing(db()) as c:
+        rows = c.execute(
+            "SELECT id, email, must_change_pw, created_at FROM users WHERE client_id=? ORDER BY created_at",
+            (cid,)).fetchall()
+    return [dict(r) for r in rows]
+
+@app.post("/api/clients/{cid}/users/{uid}/delete")
+def remove_client_user(cid: int, uid: int, _=Depends(require_admin)):
+    """Remove one login from a client (e.g. revoke a family member's access)."""
+    with closing(db()) as c:
+        u = c.execute("SELECT id FROM users WHERE id=? AND client_id=?", (uid, cid)).fetchone()
+        if not u:
+            raise HTTPException(404, "Login not found for this client")
+        c.execute("DELETE FROM users WHERE id=?", (uid,))
+        c.commit()
+    return {"ok": True}
+
+# ---- Update tab: owner submits photos/videos + new content / feedback ----
+@app.post("/api/portal/submissions")
+async def create_submission(
+    background: BackgroundTasks,
+    message: str = Form(""),
+    kind: str = Form("update"),
+    files: list[UploadFile] = File(default=[]),
+    u=Depends(get_user),
+):
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    saved = []
+    dest = os.path.join(UPLOAD_DIR, str(cid))
+    os.makedirs(dest, exist_ok=True)
+    for f in files:
+        if not f.filename:
+            continue
+        safe = "".join(ch for ch in f.filename if ch.isalnum() or ch in "._- ").strip().replace(" ", "_")
+        stamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+        fname = f"{stamp}_{safe or 'file'}"
+        with open(os.path.join(dest, fname), "wb") as out:
+            out.write(await f.read())
+        saved.append(f"/uploads/{cid}/{fname}")
+    with closing(db()) as c:
+        c.execute("INSERT INTO submissions(client_id,author_email,kind,message,files_json) VALUES(?,?,?,?,?)",
+                  (cid, u["email"], kind, message, json.dumps(saved)))
+        cl = c.execute("SELECT name FROM clients WHERE id=?", (cid,)).fetchone()
+        c.commit()
+    name = cl["name"] if cl else f"client {cid}"
+    if ADMIN_EMAIL:
+        body = (f"New {kind} from {u['email']} ({name}).\n\nMessage:\n{message or '(none)'}\n\n"
+                f"Files ({len(saved)}): " + (", ".join(saved) if saved else "none"))
+        background.add_task(send_email, ADMIN_EMAIL, f"Misane portal — new {kind} from {name}", body, u["email"])
+    return {"ok": True, "files": saved}
+
+@app.get("/api/clients/{cid}/submissions")
+def list_submissions(cid: int, _=Depends(require_admin)):
+    with closing(db()) as c:
+        rows = c.execute("SELECT * FROM submissions WHERE client_id=? ORDER BY created_at DESC", (cid,)).fetchall()
+    out = []
+    for r in rows:
+        d = dict(r)
+        try: d["files"] = json.loads(d.get("files_json") or "[]")
+        except Exception: d["files"] = []
+        out.append(d)
+    return out
+
+# ---- Public contact form on each property site → forwards to the owner's contacts ----
+class ContactIn(BaseModel):
+    domain: str
+    name: str
+    email: EmailStr
+    phone: str | None = ""
+    message: str
+
+@app.post("/api/public/contact")
+def public_contact(body: ContactIn, background: BackgroundTasks):
+    dom = body.domain.lower().strip().replace("www.", "")
+    with closing(db()) as c:
+        cl = c.execute("SELECT id FROM clients WHERE replace(lower(domain),'www.','')=?", (dom,)).fetchone()
+        cid = cl["id"] if cl else None
+        c.execute("INSERT INTO leads(client_id,domain,name,email,phone,message) VALUES(?,?,?,?,?,?)",
+                  (cid, dom, body.name, body.email, body.phone, body.message))
+        c.commit()
+    recipients = client_contact_emails(cid) if cid else []
+    if ADMIN_EMAIL:
+        recipients.append(ADMIN_EMAIL)        # Greg always gets a copy
+    text = (f"New inquiry from your property site {dom}:\n\n"
+            f"Name:  {body.name}\nEmail: {body.email}\nPhone: {body.phone or '—'}\n\n"
+            f"Message:\n{body.message}\n\nReply directly to this email to reach them.\n— Misane Properties")
+    background.add_task(send_email, recipients, f"New inquiry on {dom} — {body.name}", text, body.email)
+    return {"ok": True}
 
 # ============================================================
 # M4 — Stripe billing

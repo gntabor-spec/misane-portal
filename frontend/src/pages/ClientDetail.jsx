@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../api/client.js'
+import ClientContacts from '../components/ClientContacts.jsx'
+import ClientSubmissions from '../components/ClientSubmissions.jsx'
 
 const PLAN_EMPTY = {
   intro: '', ch_web: '', ch_specialty: '', ch_social: '', ch_realtor: '',
@@ -76,6 +78,8 @@ export default function ClientDetail() {
         {c.phone ? <p style={{ marginTop: 4 }}><a href={`tel:${c.phone}`}>{c.phone}</a></p> : <p className="muted" style={{ marginTop: 4 }}>No phone on file</p>}
       </div>
 
+      <ClientContacts cid={id} />
+
       <form onSubmit={save} className="card" style={{ marginTop: 16, maxWidth: 720 }}>
         <h3 style={{ marginBottom: 14 }}>Contact &amp; details</h3>
         <label>Name</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -110,6 +114,8 @@ export default function ClientDetail() {
           <button type="button" className="btn btn-navy" onClick={publishPlan}>Publish to client</button>
         </div>
       </div>
+
+      <ClientSubmissions cid={id} />
     </div>
   )
 }

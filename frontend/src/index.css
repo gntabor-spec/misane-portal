@@ -22,3 +22,7 @@ label{display:block;font-size:13px;font-weight:600;color:var(--navy-text);margin
 .muted{color:var(--slate2);font-size:13px}
 .error{color:var(--danger);font-size:13px;margin-top:8px}
 .wrap{max-width:1080px;margin:0 auto;padding:24px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--hairline-d);margin-bottom:4px}
+.tab{background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:var(--body);font-weight:600;font-size:14px;color:var(--slate2);padding:10px 16px;margin-bottom:-1px}
+.tab:hover{color:var(--navy-text)}
+.tab-on{color:var(--navy-text);border-bottom-color:var(--brass)}

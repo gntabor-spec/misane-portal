@@ -667,25 +667,35 @@ def checkout_signup(cid: int, _=Depends(require_admin)):
 @app.post("/api/public/signup")
 async def public_signup(
     background: BackgroundTasks,
-    name: str = Form(...),
+    first_name: str = Form(""),
+    last_name: str = Form(""),
     email: str = Form(...),
     phone: str = Form(""),
     property_type: str = Form(""),
     property_subtype: str = Form(""),
     listed_with_agent: str = Form(""),
+    listing_ref: str = Form(""),
     address: str = Form(""),
+    city: str = Form(""),
+    state: str = Form(""),
+    zip_code: str = Form(""),
     description: str = Form(""),
     files: list[UploadFile] = File(default=[]),
 ):
     """Public funnel: prospect submits property + photos, then pays the $100 deposit."""
+    name = (first_name.strip() + " " + last_name.strip()).strip() or email
+    property_address = ", ".join([p for p in [address.strip(), city.strip(), (state + " " + zip_code).strip()] if p])
     intake = {"property_type": property_type, "property_subtype": property_subtype,
-              "listed_with_agent": listed_with_agent, "address": address, "description": description}
+              "listed_with_agent": listed_with_agent, "listing_ref": listing_ref,
+              "first_name": first_name, "last_name": last_name,
+              "address": address, "city": city, "state": state, "zip": zip_code,
+              "description": description}
     scenario = "realtor" if listed_with_agent.lower() in ("yes", "true", "1") else "fsbo"
     with closing(db()) as c:
         cur = c.execute(
             "INSERT INTO clients(name,property_address,email,phone,scenario,status,property_type,intake_json) "
             "VALUES(?,?,?,?,?,?,?,?)",
-            (name, address, email, phone, scenario, "intake", property_type, json.dumps(intake)))
+            (name, property_address, email, phone, scenario, "intake", property_type, json.dumps(intake)))
         c.commit()
         cid = cur.lastrowid
     saved = []
@@ -707,8 +717,9 @@ async def public_signup(
             c.commit()
     if ADMIN_EMAIL:
         body = (f"New signup from {name} <{email}> ({phone or 'no phone'}).\n"
-                f"Type: {property_type} {property_subtype}  ·  Listed w/ agent: {listed_with_agent or 'n/a'}\n"
-                f"Address: {address or 'n/a'}\n\nWhy they love it:\n{description or '(none)'}\n\n"
+                f"Type: {property_type} {property_subtype}\n"
+                f"Listed with agent: {listed_with_agent or 'no'}" + (f" — {listing_ref}" if listing_ref else "") + "\n"
+                f"Address: {property_address or 'n/a'}\n\nWhy they love it:\n{description or '(none)'}\n\n"
                 f"Photos ({len(saved)}): " + (", ".join(saved) if saved else "none"))
         background.add_task(send_email, ADMIN_EMAIL, f"New Misane signup — {name}", body, email)
     checkout_url = None

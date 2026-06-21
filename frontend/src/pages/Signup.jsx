@@ -12,8 +12,9 @@ const TYPES = [
 const SUBTYPES = ['Lake', 'Ocean', 'Fishing', 'Hunting', 'Other lifestyle']
 
 const EMPTY = {
-  name: '', email: '', phone: '', address: '',
-  property_type: '', property_subtype: '', listed_with_agent: false, description: '',
+  firstName: '', lastName: '', email: '', phone: '',
+  address: '', city: '', state: '', zip: '',
+  property_type: '', property_subtype: '', listed_with_agent: false, listing_ref: '', description: '',
 }
 
 export default function Signup() {
@@ -27,19 +28,21 @@ export default function Signup() {
     e.preventDefault()
     setErr('')
     if (!f.property_type) { setErr('Please choose a property type.'); return }
-    if (!f.name || !f.email) { setErr('Name and email are required.'); return }
+    if (!f.firstName || !f.lastName || !f.email) { setErr('First name, last name, and email are required.'); return }
     setBusy(true)
     try {
       const fd = new FormData()
-      fd.append('name', f.name); fd.append('email', f.email); fd.append('phone', f.phone)
-      fd.append('address', f.address); fd.append('property_type', f.property_type)
+      fd.append('first_name', f.firstName); fd.append('last_name', f.lastName)
+      fd.append('email', f.email); fd.append('phone', f.phone)
+      fd.append('address', f.address); fd.append('city', f.city); fd.append('state', f.state); fd.append('zip_code', f.zip)
+      fd.append('property_type', f.property_type)
       fd.append('property_subtype', f.property_type === 'Lifestyle' ? f.property_subtype : '')
       fd.append('listed_with_agent', f.listed_with_agent ? 'yes' : 'no')
+      fd.append('listing_ref', f.listed_with_agent ? f.listing_ref : '')
       fd.append('description', f.description)
       for (const file of files) fd.append('files', file)
       const r = await api.publicSignup(fd)
-      if (r.checkout_url) { window.location.href = r.checkout_url }
-      else { window.location.href = '/start/thanks' }
+      window.location.href = r.checkout_url || '/start/thanks'
     } catch (ex) { setErr(ex.message); setBusy(false) }
   }
 
@@ -62,9 +65,7 @@ export default function Signup() {
           <h3 style={{ marginBottom: 12 }}>What kind of property is it?</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
             {TYPES.map(([t, d]) => (
-              <button type="button" key={t}
-                onClick={() => setF({ ...f, property_type: t })}
-                className="card"
+              <button type="button" key={t} onClick={() => setF({ ...f, property_type: t })} className="card"
                 style={{ textAlign: 'left', cursor: 'pointer', borderColor: f.property_type === t ? 'var(--navy)' : 'var(--hairline-d)', borderWidth: f.property_type === t ? 2 : 1, padding: 16 }}>
                 <b style={{ color: 'var(--navy-text)' }}>{t}</b>
                 <div className="muted" style={{ marginTop: 4 }}>{d}</div>
@@ -80,21 +81,40 @@ export default function Signup() {
               </select>
             </div>
           )}
-          <label style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 400 }}>
-            <input type="checkbox" style={{ width: 'auto' }} checked={f.listed_with_agent} onChange={(e) => setF({ ...f, listed_with_agent: e.target.checked })} />
-            It’s already listed with a real-estate agent (we’ll augment, not replace, them)
-          </label>
+
+          <div style={{ marginTop: 16, padding: 14, border: '1px solid var(--hairline-d)', borderRadius: 8, background: 'var(--greige)' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontWeight: 600, color: 'var(--navy-text)' }}>
+              <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={f.listed_with_agent} onChange={(e) => setF({ ...f, listed_with_agent: e.target.checked })} />
+              <span>Is this property already listed with a real-estate agent?
+                <span style={{ display: 'block', fontWeight: 400, color: 'var(--slate2)', fontSize: 13, marginTop: 2 }}>
+                  We augment your agent — we never replace them, and every lead routes to them.
+                </span>
+              </span>
+            </label>
+            {f.listed_with_agent && (
+              <div style={{ marginTop: 12 }}>
+                <label>Paste your listing link (Realtor.com / Zillow) or your MLS number</label>
+                <input value={f.listing_ref} onChange={set('listing_ref')} placeholder="https://www.realtor.com/realestateandhomes-detail/…  or  MLS# 1234567" />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="card" style={{ marginTop: 16 }}>
           <h3 style={{ marginBottom: 12 }}>Your contact info</h3>
           <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><label>Name</label><input value={f.name} onChange={set('name')} required /></div>
-            <div style={{ flex: 1 }}><label>Email</label><input type="email" value={f.email} onChange={set('email')} required /></div>
+            <div style={{ flex: 1 }}><label>First name</label><input value={f.firstName} onChange={set('firstName')} required /></div>
+            <div style={{ flex: 1 }}><label>Last name</label><input value={f.lastName} onChange={set('lastName')} required /></div>
           </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+            <div style={{ flex: 1 }}><label>Email</label><input type="email" value={f.email} onChange={set('email')} required /></div>
             <div style={{ flex: 1 }}><label>Phone</label><input value={f.phone} onChange={set('phone')} /></div>
-            <div style={{ flex: 1 }}><label>Property address</label><input value={f.address} onChange={set('address')} /></div>
+          </div>
+          <div style={{ marginTop: 12 }}><label>Street address</label><input value={f.address} onChange={set('address')} placeholder="1050 Champions Circle" /></div>
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+            <div style={{ flex: 2 }}><label>City</label><input value={f.city} onChange={set('city')} /></div>
+            <div style={{ flex: 1 }}><label>State</label><input value={f.state} onChange={set('state')} placeholder="MN" /></div>
+            <div style={{ flex: 1 }}><label>Zip code</label><input value={f.zip} onChange={set('zip')} /></div>
           </div>
         </div>
 

@@ -186,6 +186,17 @@ def update_client(cid: int, body: ClientUpdate, _=Depends(require_admin)):
         c.commit()
     return {"ok": True}
 
+@app.post("/api/clients/{cid}/delete")
+def delete_client(cid: int, _=Depends(require_admin)):
+    """Remove a client and any login tied to it (e.g. a duplicate)."""
+    with closing(db()) as c:
+        if not c.execute("SELECT id FROM clients WHERE id=?", (cid,)).fetchone():
+            raise HTTPException(404, "Client not found")
+        c.execute("DELETE FROM users WHERE client_id=?", (cid,))
+        c.execute("DELETE FROM clients WHERE id=?", (cid,))
+        c.commit()
+    return {"ok": True}
+
 @app.post("/api/clients/{cid}/status")
 def set_status(cid: int, body: StatusIn, _=Depends(require_admin)):
     """Admin override — move a client to any stage (waive/skip)."""

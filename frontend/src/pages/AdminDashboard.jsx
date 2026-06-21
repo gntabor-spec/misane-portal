@@ -27,6 +27,10 @@ export default function AdminDashboard() {
     if (!email) return
     try { setInvite(await api.invite(cid, email)) } catch (ex) { alert(ex.message) }
   }
+  async function remove(cid, name) {
+    if (!confirm(`Delete "${name}"? This removes the client and any login for it. This can't be undone.`)) return
+    try { await api.deleteClient(cid); load() } catch (ex) { alert(ex.message) }
+  }
   async function changeStatus(cid, status) {
     try { await api.setStatus(cid, status); load() } catch (ex) { alert(ex.message) }
   }
@@ -77,7 +81,8 @@ export default function AdminDashboard() {
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <button className="btn btn-line" onClick={() => doInvite(c.id)}>Invite</button>{' '}
                   <button className="btn btn-line" onClick={() => checkout(c.id, 'signup')}>$100</button>{' '}
-                  <button className="btn btn-line" onClick={() => checkout(c.id, 'approval')}>$500</button>
+                  <button className="btn btn-line" onClick={() => checkout(c.id, 'approval')}>$500</button>{' '}
+                  <button className="btn btn-line" style={{ color: 'var(--danger)' }} onClick={() => remove(c.id, c.name)}>Delete</button>
                 </td>
               </tr>
             ))}

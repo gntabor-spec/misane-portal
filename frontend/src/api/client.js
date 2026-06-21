@@ -46,4 +46,7 @@ export const api = {
   removeClientUser: (cid, uid) => req(`/api/clients/${cid}/users/${uid}/delete`, { method: 'POST' }),
   submitUpdate: (formData) => reqForm('/api/portal/submissions', formData),
   listSubmissions: (cid) => req(`/api/clients/${cid}/submissions`),
+  adminOverview: () => req('/api/admin/overview'),
+  publicSignup: (formData) => reqForm('/api/public/signup', formData),
+  publicContact: (b) => req('/api/public/contact', { method: 'POST', body: JSON.stringify(b) }),
 }

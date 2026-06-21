@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../api/client.js'
+import AdminOverview from '../components/AdminOverview.jsx'
 
 const EMPTY = { name: '', email: '', phone: '', property_address: '', domain: '', scenario: 'fsbo' }
 const STATUSES = ['intake', 'building', 'preview', 'approved', 'live', 'maintenance', 'cancelled']
@@ -45,9 +46,14 @@ export default function AdminDashboard() {
     <div className="wrap">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <img src="/logo-horizontal.png" alt="Misane Properties" style={{ height: 34 }} />
-        <button className="btn btn-line" onClick={logout}>Sign out</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <a className="btn btn-line" href="https://misaneproperties.com" target="_blank" rel="noopener">Misane site ↗</a>
+          <button className="btn btn-line" onClick={logout}>Sign out</button>
+        </div>
       </header>
-      <h1>Clients</h1>
+      <h1 style={{ marginBottom: 16 }}>Dashboard</h1>
+      <AdminOverview />
+      <h2 style={{ marginBottom: 4 }}>Clients</h2>
       {err && <div className="error">{err}</div>}
       {invite && (
         <div className="card" style={{ margin: '14px 0', background: 'var(--greige)' }}>

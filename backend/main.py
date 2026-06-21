@@ -104,7 +104,7 @@ def init_db():
                           (admin_email, pwd.hash(admin_pw), "admin"))
         # migrate existing DBs: add new columns if missing
         existing = [r[1] for r in c.execute("PRAGMA table_info(clients)").fetchall()]
-        for col in ("email", "phone", "plan_draft", "plan_published"):
+        for col in ("email", "phone", "plan_draft", "plan_published", "property_type"):
             if col not in existing:
                 c.execute(f"ALTER TABLE clients ADD COLUMN {col} TEXT")
         c.commit()
@@ -243,6 +243,26 @@ def list_clients(_=Depends(require_admin)):
     with closing(db()) as c:
         rows = c.execute("SELECT * FROM clients ORDER BY created_at DESC").fetchall()
     return [dict(r) for r in rows]
+
+@app.get("/api/admin/overview")
+def admin_overview(_=Depends(require_admin)):
+    """Dashboard data: client counts by status, plus the latest leads and update requests."""
+    with closing(db()) as c:
+        rows = c.execute("SELECT status, COUNT(*) n FROM clients GROUP BY status").fetchall()
+        total = c.execute("SELECT COUNT(*) n FROM clients").fetchone()["n"]
+        leads = c.execute("SELECT * FROM leads ORDER BY created_at DESC LIMIT 10").fetchall()
+        subs = c.execute(
+            "SELECT s.*, cl.name AS client_name FROM submissions s "
+            "LEFT JOIN clients cl ON cl.id=s.client_id ORDER BY s.created_at DESC LIMIT 10").fetchall()
+    def sub(r):
+        d = dict(r)
+        try: d["files"] = json.loads(d.get("files_json") or "[]")
+        except Exception: d["files"] = []
+        return d
+    return {"total": total,
+            "by_status": {r["status"]: r["n"] for r in rows},
+            "recent_leads": [dict(r) for r in leads],
+            "recent_updates": [sub(r) for r in subs]}
 
 @app.post("/api/clients")
 def create_client(body: ClientIn, _=Depends(require_admin)):
@@ -485,20 +505,80 @@ def _ensure_customer(cl):
     _set_client(cl["id"], stripe_customer=cust.id)
     return cust.id
 
-@app.post("/api/clients/{cid}/checkout/signup")
-def checkout_signup(cid: int, _=Depends(require_admin)):
-    _client_or_404(cid)
-    s = stripe.checkout.Session.create(
+def _signup_session(cid, success_url, cancel_url):
+    return stripe.checkout.Session.create(
         mode="payment",
         line_items=[{"price_data": {"currency": "usd", "unit_amount": 10000,
                      "product_data": {"name": "Misane Properties — Signup deposit"}}, "quantity": 1}],
-        success_url=f"{APP_URL}/portal?paid=signup", cancel_url=f"{APP_URL}/portal",
+        success_url=success_url, cancel_url=cancel_url,
         metadata={"client_id": str(cid), "kind": "signup"},
     )
+
+@app.post("/api/clients/{cid}/checkout/signup")
+def checkout_signup(cid: int, _=Depends(require_admin)):
+    _client_or_404(cid)
+    s = _signup_session(cid, f"{APP_URL}/portal?paid=signup", f"{APP_URL}/portal")
     return {"url": s.url}
 
+@app.post("/api/public/signup")
+async def public_signup(
+    background: BackgroundTasks,
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(""),
+    property_type: str = Form(""),
+    property_subtype: str = Form(""),
+    listed_with_agent: str = Form(""),
+    address: str = Form(""),
+    description: str = Form(""),
+    files: list[UploadFile] = File(default=[]),
+):
+    """Public funnel: prospect submits property + photos, then pays the $100 deposit."""
+    intake = {"property_type": property_type, "property_subtype": property_subtype,
+              "listed_with_agent": listed_with_agent, "address": address, "description": description}
+    scenario = "realtor" if listed_with_agent.lower() in ("yes", "true", "1") else "fsbo"
+    with closing(db()) as c:
+        cur = c.execute(
+            "INSERT INTO clients(name,property_address,email,phone,scenario,status,property_type,intake_json) "
+            "VALUES(?,?,?,?,?,?,?,?)",
+            (name, address, email, phone, scenario, "intake", property_type, json.dumps(intake)))
+        c.commit()
+        cid = cur.lastrowid
+    saved = []
+    if files:
+        dest = os.path.join(UPLOAD_DIR, str(cid))
+        os.makedirs(dest, exist_ok=True)
+        for f in files:
+            if not f.filename:
+                continue
+            safe = "".join(ch for ch in f.filename if ch.isalnum() or ch in "._- ").strip().replace(" ", "_")
+            stamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+            fname = f"{stamp}_{safe or 'file'}"
+            with open(os.path.join(dest, fname), "wb") as out:
+                out.write(await f.read())
+            saved.append(f"/uploads/{cid}/{fname}")
+        with closing(db()) as c:
+            c.execute("INSERT INTO submissions(client_id,author_email,kind,message,files_json) VALUES(?,?,?,?,?)",
+                      (cid, email, "signup", description, json.dumps(saved)))
+            c.commit()
+    if ADMIN_EMAIL:
+        body = (f"New signup from {name} <{email}> ({phone or 'no phone'}).\n"
+                f"Type: {property_type} {property_subtype}  ·  Listed w/ agent: {listed_with_agent or 'n/a'}\n"
+                f"Address: {address or 'n/a'}\n\nWhy they love it:\n{description or '(none)'}\n\n"
+                f"Photos ({len(saved)}): " + (", ".join(saved) if saved else "none"))
+        background.add_task(send_email, ADMIN_EMAIL, f"New Misane signup — {name}", body, email)
+    checkout_url = None
+    if stripe.api_key:
+        try:
+            checkout_url = _signup_session(cid, f"{APP_URL}/start/thanks", f"{APP_URL}/start").url
+        except Exception as e:
+            print("[signup checkout error]", e)
+    return {"client_id": cid, "checkout_url": checkout_url}
+
 @app.post("/api/clients/{cid}/checkout/approval")
-def checkout_approval(cid: int, _=Depends(require_admin)):
+def checkout_approval(cid: int, u=Depends(get_user)):
+    if u["role"] != "admin" and u.get("client_id") != cid:
+        raise HTTPException(403, "Forbidden")
     cl = _client_or_404(cid)
     cust = _ensure_customer(cl)
     s = stripe.checkout.Session.create(

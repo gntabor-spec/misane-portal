@@ -5,6 +5,8 @@ import AdminDashboard from './pages/AdminDashboard.jsx'
 import ClientDetail from './pages/ClientDetail.jsx'
 import PreviewPortal from './pages/PreviewPortal.jsx'
 import ClientDashboard from './pages/ClientDashboard.jsx'
+import Signup from './pages/Signup.jsx'
+import SignupThanks from './pages/SignupThanks.jsx'
 
 function Home() {
   const { user, loading } = useAuth()
@@ -26,6 +28,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/start" element={<Signup />} />
+      <Route path="/start/thanks" element={<SignupThanks />} />
       <Route path="/admin" element={<Require role="admin"><AdminDashboard /></Require>} />
       <Route path="/admin/clients/:id" element={<Require role="admin"><ClientDetail /></Require>} />
       <Route path="/admin/clients/:id/preview" element={<Require role="admin"><PreviewPortal /></Require>} />

@@ -15,12 +15,19 @@ export default function ClientDashboard() {
     if (!confirm('Cancel your subscription? It ends at the close of the current period; your last payment covers the coming month.')) return
     try { await api.cancelSub(c.id); alert('Cancellation requested — we’ll confirm by email.') } catch (ex) { alert(ex.message) }
   }
+  async function approve() {
+    if (!confirm('Approve your draft site and continue to the $500 build fee?')) return
+    try { const r = await api.checkoutApproval(c.id); window.location.href = r.url } catch (ex) { alert(ex.message) }
+  }
 
   return (
     <div className="wrap">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <img src="/logo-horizontal.png" alt="Misane Properties" style={{ height: 34 }} />
-        <button className="btn btn-line" onClick={logout}>Sign out</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <a className="btn btn-line" href="https://misaneproperties.com" target="_blank" rel="noopener">Misane site ↗</a>
+          <button className="btn btn-line" onClick={logout}>Sign out</button>
+        </div>
       </header>
 
       <div className="tabs">
@@ -29,7 +36,7 @@ export default function ClientDashboard() {
       </div>
 
       {tab === 'plan'
-        ? <ClientPortalView client={c} plan={plan} onCancel={cancel} />
+        ? <ClientPortalView client={c} plan={plan} onCancel={cancel} onApprove={approve} />
         : <UpdateForm />}
     </div>
   )

@@ -2,7 +2,7 @@
 // `plan` is the parsed marketing-plan object (published for clients, draft for preview), or null.
 const lines = (s) => (s || '').split('\n').map((x) => x.trim()).filter(Boolean)
 
-export default function ClientPortalView({ client, plan, preview = false, onCancel }) {
+export default function ClientPortalView({ client, plan, preview = false, onCancel, onApprove }) {
   const c = client
   const p = plan
 
@@ -13,6 +13,17 @@ export default function ClientPortalView({ client, plan, preview = false, onCanc
       {c?.property_address && <p className="muted" style={{ marginTop: 6 }}>{c.property_address}</p>}
       {c?.domain && (
         <p style={{ marginTop: 6 }}><b>Your site:</b> <a href={`https://${c.domain}`} target="_blank" rel="noopener">{c.domain}</a></p>
+      )}
+
+      {!preview && c?.status === 'preview' && (
+        <div className="card" style={{ marginTop: 16, background: 'var(--navy)', color: '#e7ebf6', border: 'none' }}>
+          <h3 style={{ color: '#fff', marginBottom: 6 }}>Your draft site is ready to review.</h3>
+          <p style={{ color: '#cfd6ea', marginBottom: 14 }}>
+            Take a look at your site above. When you’re happy with it, approve to continue — the $500 build fee
+            unlocks your full Marketing Packet and takes your site live.
+          </p>
+          <button className="btn btn-gold" onClick={onApprove}>Approve &amp; continue to $500</button>
+        </div>
       )}
 
       {!p ? (

@@ -34,7 +34,17 @@ export default function ImagesTab({ preview }) {
 
   return (
     <div>
-      <div className="card" style={{ marginTop: 18 }}>
+      <form onSubmit={submit} className="card" style={{ marginTop: 18, maxWidth: 720 }}>
+        <h3 style={{ marginBottom: 6 }}>Add photos &amp; video</h3>
+        <p className="muted" style={{ marginBottom: 12 }}>New seasons, new features, better shots — add them and we’ll refresh your site.</p>
+        <input type="file" multiple accept="image/*,video/*" onChange={(e) => setFiles([...e.target.files])} />
+        {files.length > 0 && <p className="muted" style={{ marginTop: 6 }}>{files.length} file(s) selected</p>}
+        {err && <div className="error">{err}</div>}
+        {done && <div style={{ color: 'var(--green)', fontSize: 13, marginTop: 8 }}>Uploaded — thank you.</div>}
+        <button className="btn btn-navy" style={{ marginTop: 14 }} disabled={busy}>{busy ? 'Uploading…' : 'Upload photos'}</button>
+      </form>
+
+      <div className="card" style={{ marginTop: 14 }}>
         <h3 style={{ marginBottom: 6 }}>Your photos</h3>
         <p className="muted" style={{ marginBottom: 14 }}>
           These are the photos you’ve sent us. Flag any you’d like removed and we’ll take them down on the next update.
@@ -42,7 +52,7 @@ export default function ImagesTab({ preview }) {
         {preview ? (
           <p className="muted">The client’s photo library shows here.</p>
         ) : imgs.length === 0 ? (
-          <p className="muted">No photos uploaded yet — add some below.</p>
+          <p className="muted">No photos uploaded yet — add some above.</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 12 }}>
             {imgs.map((im) => (
@@ -58,16 +68,6 @@ export default function ImagesTab({ preview }) {
           </div>
         )}
       </div>
-
-      <form onSubmit={submit} className="card" style={{ marginTop: 14, maxWidth: 720 }}>
-        <h3 style={{ marginBottom: 6 }}>Add photos &amp; video</h3>
-        <p className="muted" style={{ marginBottom: 12 }}>New seasons, new features, better shots — add them and we’ll refresh your site.</p>
-        <input type="file" multiple accept="image/*,video/*" onChange={(e) => setFiles([...e.target.files])} />
-        {files.length > 0 && <p className="muted" style={{ marginTop: 6 }}>{files.length} file(s) selected</p>}
-        {err && <div className="error">{err}</div>}
-        {done && <div style={{ color: 'var(--green)', fontSize: 13, marginTop: 8 }}>Uploaded — thank you.</div>}
-        <button className="btn btn-navy" style={{ marginTop: 14 }} disabled={busy}>{busy ? 'Uploading…' : 'Upload photos'}</button>
-      </form>
     </div>
   )
 }

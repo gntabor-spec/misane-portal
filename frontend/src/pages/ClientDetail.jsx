@@ -41,6 +41,7 @@ export default function ClientDetail() {
       <Link to="/admin" style={{ fontSize: 13 }}>&larr; All clients</Link>
       <h1 style={{ marginTop: 8 }}>{c.name}</h1>
       <p className="muted">Status: {c.status} &middot; {c.scenario}{c.domain ? ` · ${c.domain}` : ''}</p>
+      <Link className="btn btn-line" to={`/admin/clients/${id}/preview`} style={{ marginTop: 10 }}>Preview portal (what the client sees)</Link>
 
       <div className="card" style={{ marginTop: 16, maxWidth: 560 }}>
         <h3 style={{ marginBottom: 10 }}>Quick contact</h3>

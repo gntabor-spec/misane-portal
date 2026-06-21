@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext.jsx'
 import Login from './pages/Login.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import ClientDetail from './pages/ClientDetail.jsx'
+import PreviewPortal from './pages/PreviewPortal.jsx'
 import ClientDashboard from './pages/ClientDashboard.jsx'
 
 function Home() {
@@ -27,6 +28,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/admin" element={<Require role="admin"><AdminDashboard /></Require>} />
       <Route path="/admin/clients/:id" element={<Require role="admin"><ClientDetail /></Require>} />
+      <Route path="/admin/clients/:id/preview" element={<Require role="admin"><PreviewPortal /></Require>} />
       <Route path="/portal" element={<Require role="client"><ClientDashboard /></Require>} />
     </Routes>
   )

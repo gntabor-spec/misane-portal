@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — Michael's Marketing Plan | Misane Properties</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Libre+Franklin:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0B1A48;--navy-text:#14224F;--brass:#B7843C;--gold:#D8A24E;--amber:#F4A41C;--paper:#FAF8F3;--greige:#F0EBE0;--slate:#43474E;--slate2:#5C6068;--hairline:#E0D9CC;--hairline-d:#CFC7B7;--green:#1F8A5B;--display:'Fraunces',Georgia,serif;--body:'Libre Franklin',system-ui,sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);color:var(--slate);background:var(--paper);line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--display);color:var(--navy-text);font-weight:600;letter-spacing:-0.01em;line-height:1.12}
+  .wrap{max-width:920px;margin:0 auto;padding:0 26px}
+  a{color:var(--brass)}
+  .flag{background:var(--amber);color:#241c08;text-align:center;font-weight:600;font-size:13px;padding:8px}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:12px 26px;border-bottom:1px solid var(--hairline);background:#fff}
+  .bar img{height:34px}
+  .bar .who{font-size:12px;color:var(--slate2)}
+  .top{background:var(--navy);color:#fff;padding:26px 0}
+  .top h1{color:#fff;font-size:28px}
+  .top .sub{color:#cfd6ea;margin-top:5px;font-size:14px}
+  .pill{display:inline-block;background:var(--green);color:#fff;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-top:12px}
+  .kicker{font-family:var(--body);font-weight:600;text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--gold)}
+  section{padding:22px 0}
+  .sec-t{font-size:22px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .sec-d{font-size:14px;color:var(--slate2);margin-bottom:8px}
+  .card{background:#fff;border:1px solid var(--hairline-d);border-radius:12px;padding:20px;margin-top:14px}
+  .card h3{font-size:17px;margin-bottom:10px}
+  ul.tick{list-style:none}
+  ul.tick li{padding:6px 0 6px 26px;position:relative;font-size:14.5px;color:var(--slate)}
+  ul.tick li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:9px;border:2px solid var(--brass);border-radius:50%;background:var(--brass)}
+  ul.tick li.have{color:var(--navy-text)}
+  ul.tick li.have::before{content:"\2713";color:var(--green);background:none;border:none;font-weight:700;font-size:14px;top:5px;width:auto;height:auto}
+  ul.tick li.have em{color:var(--green);font-style:normal;font-size:12.5px}
+  .pic{width:18px;height:18px;vertical-align:-3px;margin-right:8px;flex-shrink:0}
+  .addon{margin-top:12px;background:#fff7ec;border:1px solid #f0d9a8;border-radius:9px;padding:12px 14px;font-size:13.5px;color:#7a5a16}
+  .addon b{color:#5e4512}
+  .addon a{color:var(--brass);font-weight:600}
+  .site{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--hairline);flex-wrap:wrap}
+  .site:last-child{border-bottom:none}
+  .site .n{font-weight:600;color:var(--navy-text);font-size:15px}
+  .site .n small{display:block;font-weight:400;color:var(--slate2);font-size:12.5px}
+  .site .n .tg{display:inline-block;margin-top:4px;font-size:11px;font-weight:600;color:var(--green)}
+  .site .n .tg.paid{color:#a06b16}
+  .btn{display:inline-block;font-family:var(--body);font-weight:600;font-size:13px;padding:8px 15px;border-radius:5px;text-decoration:none;cursor:pointer;border:none}
+  .btn-navy{background:var(--navy);color:#fff}
+  .btn-line{background:transparent;color:var(--navy-text);border:1px solid var(--hairline-d)}
+  .copybox{background:var(--greige);border:1px solid var(--hairline-d);border-radius:9px;margin-top:12px;overflow:hidden}
+  .copybox .ch{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--hairline-d);background:#efe9dd}
+  .copybox .ch small{font-size:11px;color:var(--slate2)}
+  .copybox .cp{background:var(--navy);color:#fff;border:none;font-weight:600;font-size:11px;padding:6px 11px;border-radius:5px;cursor:pointer}
+  .copybox pre{white-space:pre-wrap;font-family:var(--body);font-size:14px;color:var(--navy-text);line-height:1.5;padding:14px 16px}
+  .thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .thumbs a{display:block;width:108px;text-decoration:none}
+  .thumbs img{width:108px;height:78px;object-fit:cover;border-radius:7px;border:1px solid var(--hairline-d);filter:saturate(1.2) contrast(1.1) brightness(.98)}
+  .thumbs span{display:block;font-size:11px;color:var(--slate2);margin-top:3px;text-align:center}
+  .thumbs a:hover span{color:var(--brass)}
+  .dl{font-size:12px;color:var(--slate2);margin-top:8px}
+  .grp{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--hairline)}
+  .grp:last-child{border-bottom:none}
+  .grp .n{font-weight:600;color:var(--navy-text);font-size:14.5px}
+  .disc{background:#fff7ec;border:1px solid #f0d9a8;border-radius:9px;padding:12px 14px;font-size:13px;color:#7a5a16;margin-top:12px}
+  .tags{font-size:13px;color:var(--navy-text);background:var(--greige);border:1px solid var(--hairline-d);border-radius:9px;margin-top:10px;overflow:hidden}
+  .tags .ch{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--hairline-d);background:#efe9dd}
+  .tags .ch small{font-size:11px;color:var(--slate2)}
+  .tags .cp{background:var(--navy);color:#fff;border:none;font-weight:600;font-size:11px;padding:6px 11px;border-radius:5px;cursor:pointer}
+  .tags .body{padding:12px 14px;word-spacing:2px}
+  .note{font-size:13px;color:var(--slate2);margin-top:10px}
+  .frame{width:100%;height:540px;border:1px solid var(--hairline-d);border-radius:8px;margin-top:8px;background:#fff}
+  .opt{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--hairline)}
+  .opt:last-child{border-bottom:none}
+  .opt .r{width:16px;height:16px;border:2px solid var(--hairline-d);border-radius:50%;margin-top:2px;flex-shrink:0}
+  .opt.sel .r{border-color:var(--brass);background:radial-gradient(var(--brass) 40%,#fff 46%)}
+  .opt .l b{color:var(--navy-text)}
+  .opt .l p{font-size:13px;color:var(--slate2)}
+  .footnote{text-align:center;color:var(--slate2);font-size:12px;padding:22px}
+</style>
+</head>
+<body>
+<div class="flag">Preview — Michael's Marketing Plan (what he sees once published)</div>
+<header class="bar"><img src="michael-images/logo.png" alt="Misane Properties"><div class="who">Client Portal &middot; 3545 Uniform St &middot; Michael Heinisch</div></header>
+
+<div class="top"><div class="wrap">
+  <div class="kicker">Marketing Plan</div>
+  <h1>3545 Uniform St &mdash; 400 Acres + Cabin</h1>
+  <div class="sub">Sandstone, MN &middot; $1,400,000 &middot; For sale by owner &middot; <a href="https://3545uniformst.com" style="color:#fff">3545uniformst.com</a></div>
+  <span class="pill">Site Live</span>
+</div></div>
+
+<!-- 1 METRO -->
+<section style="padding-top:24px"><div class="wrap">
+  <h2 class="sec-t">1 · Metro marketing</h2>
+  <div class="sec-d">Your biggest pool of buyers isn't local — it's the city, an hour away.</div>
+  <div class="card" style="background:var(--navy);color:#e7ebf6;border:none">
+    <div class="kicker" style="color:var(--gold)">Marketing strategy</div>
+    <h2 style="color:#fff;font-size:24px;margin:6px 0 8px">Sell the escape — market to the Twin Cities.</h2>
+    <p style="color:#cfd6ea;font-size:15px;max-width:70ch">You're ~1 hour from Minneapolis–St. Paul and roughly 3.7 million people. Your strongest buyer is a city family or professional who wants a weekend escape: <em style="color:var(--gold);font-style:italic">leave work Friday, be at your own cabin by dinner.</em> Lead with that — and don't just market locally, market to the metro.</p>
+    <ul class="tick" style="margin-top:12px">
+      <li style="color:#e7ebf6">Set Facebook Marketplace location to <b>Minneapolis</b> so metro buyers see it — not just locals</li>
+      <li style="color:#e7ebf6">Post in Twin Cities cabin/lake groups (in the Facebook section), not only hunting groups</li>
+      <li style="color:#e7ebf6">Headline the <b>"1 hour from the Twin Cities"</b> escape angle on every listing</li>
+    </ul>
+    <div class="copybox" style="margin-top:14px">
+      <div class="ch"><small>Metro "escape" post — edit as you like</small><button class="cp" data-c="metro">Copy</button></div>
+      <pre id="metro">Your escape from the city — 400 acres, one hour north.
+
+Leave work Friday and be at your own cabin on 400 private acres by dinner. Whitetail untouched ~20 years, a 40-acre food plot, bear & turkey — and not a neighbor in sight. An hour from the Twin Cities, worlds away from it.
+
+For sale by owner · $1,400,000 · 3545UniformSt.com</pre></div>
+  </div>
+  <div class="card">
+    <div class="site"><div class="n">Escape brochure (metro version)<small>Leads with the "escape the city" angle for Twin Cities buyers</small></div><a class="btn btn-navy" href="escape-brochure.html" target="_blank">Open &amp; save PDF</a></div>
+    <iframe class="frame" src="escape-brochure.html" title="Escape brochure preview"></iframe>
+  </div>
+</div></section>
+
+<!-- 2 PRODUCTION -->
+<section><div class="wrap">
+  <h2 class="sec-t">2 · What we recommend producing</h2>
+  <div class="sec-d">At $1.4M the visuals carry the sale. Green checks are what you already have.</div>
+  <div class="card"><ul class="tick">
+    <li>Professional photos — the land, exterior, and the cabin interior</li>
+    <li>Lifestyle shots — a hunting-camp or family moment (we keep faces unidentifiable)</li>
+    <li class="have">Trophy trail-cam photos <em>— you have these</em></li>
+    <li class="have">Aerial / boundary map <em>— you have this</em></li>
+    <li>Drone flyover video — if available, a great add for showing 400 acres at scale</li>
+  </ul>
+  <div class="addon"><b>Add-on — image cleanup ($20):</b> some photos benefit from a quick crop &amp; clean-up, and we make sure no one is identifiable. We don't alter the property — just crop, straighten &amp; protect privacy. Billed to your card on file. <a href="mailto:greg@misaneproperties.com?subject=3545%20-%20image%20cleanup%20add-on">Request cleanup &rarr;</a></div>
+  </div>
+</div></section>
+
+<!-- 2 LAND SITES -->
+<section><div class="wrap">
+  <h2 class="sec-t"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="#0B1A48" stroke-width="2" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg>3 · Land sites (FSBO)</h2>
+  <div class="sec-d">How it works: make a free account, click "list / sell," add your title, price, description &amp; photos, then publish. Paid tiers push you higher in search.</div>
+  <div class="card">
+    <div class="site"><div class="n">LandWatch<small>Largest hunting-land marketplace</small><span class="tg paid">FSBO ✓ · Paid listing (Land.com network)</span></div><a class="btn btn-navy" href="https://www.landwatch.com/" target="_blank">List here</a></div>
+    <div class="site"><div class="n">Lands of America<small>Rural &amp; recreational</small><span class="tg paid">FSBO ✓ · Paid (Land.com network)</span></div><a class="btn btn-navy" href="https://www.landsofamerica.com/" target="_blank">List here</a></div>
+    <div class="site"><div class="n">Land And Farm<small>Rural property marketplace</small><span class="tg paid">FSBO ✓ · Paid (Land.com network)</span></div><a class="btn btn-navy" href="https://www.landandfarm.com/" target="_blank">List here</a></div>
+    <div class="site"><div class="n">LANDFLIP<small>FSBO land marketplace</small><span class="tg">FSBO ✓ · Free basic + paid upgrades</span></div><a class="btn btn-navy" href="https://www.landflip.com/land-fsbo" target="_blank">List here</a></div>
+    <div class="site"><div class="n">Landmodo<small>FSBO recreational land</small><span class="tg paid">FSBO ✓ · Paid listing</span></div><a class="btn btn-navy" href="https://www.landmodo.com/" target="_blank">List here</a></div>
+    <div class="site"><div class="n">Zillow — For Sale By Owner<small>Verifies you as owner</small><span class="tg">FSBO ✓ · Free</span></div><a class="btn btn-navy" href="https://www.zillow.com/for-sale-by-owner/" target="_blank">List here</a></div>
+    <p class="note"><b>On fees:</b> the three Land.com sites (LandWatch / Lands of America / Land And Farm) are one paid package that syndicates across all three. Zillow FSBO and LANDFLIP's basic tier are free; exact prices vary by site &amp; package.</p>
+  </div>
+  <div class="copybox">
+    <div class="ch"><small>Copy &amp; paste — edit before posting if you like</small><button class="cp" data-c="land">Copy</button></div>
+    <pre id="land">400± Acres of Secluded Hunting Land with Cabin — Sandstone, MN — $1,400,000 (FSBO)
+
+• 400± acres at the end of a 1.5-mile private, dead-end road
+• Hunting cabin (wood stove, 2 baths) + pole building + barn
+• 40-acre food-plot field; whitetail ground untouched ~20 years
+• Deer, bear, turkey, grouse & woodcock
+• ~$7,000/yr income via the MN Sustainable Forest Incentive Act (SFIA)
+• 30 min to Grand Casino Hinckley · 40 min to Lake Mille Lacs · ~1 hr from the Twin Cities
+• Property lines approximate; buyer to verify
+
+Full photos & maps: 3545UniformSt.com</pre></div>
+  <p class="dl">Photos to post (click to download) · <a href="image-library.html" target="_blank">open your full image library &rarr;</a></p>
+  <div class="thumbs">
+    <a href="michael-images/aerial.jpg" download="3545-aerial.jpg"><img src="michael-images/aerial.jpg" alt=""><span>Aerial</span></a>
+    <a href="michael-images/cabin.jpg" download="3545-cabin.jpg"><img src="michael-images/cabin.jpg" alt=""><span>Cabin</span></a>
+    <a href="michael-images/field.jpg" download="3545-field.jpg"><img src="michael-images/field.jpg" alt=""><span>Food plot</span></a>
+    <a href="michael-images/buck-day.jpg" download="3545-buck.jpg"><img src="michael-images/buck-day.jpg" alt=""><span>Trophy buck</span></a>
+    <a href="michael-images/map.jpg" download="3545-map.jpg"><img src="michael-images/map.jpg" alt=""><span>Boundary map</span></a>
+  </div>
+</div></section>
+
+<!-- 3 FACEBOOK -->
+<section><div class="wrap">
+  <h2 class="sec-t"><svg class="pic" viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#1877F2"/><text x="13" y="18" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">f</text></svg>4 · Facebook</h2>
+  <div class="sec-d">You must be signed in to Facebook, and to post in a group you must <b>join it first</b> (you can only post as a member).</div>
+  <div class="card">
+    <div class="site"><div class="n">Facebook Marketplace<small>List under Land / Recreational</small></div><a class="btn btn-navy" href="https://www.facebook.com/marketplace/create/item" target="_blank">Create listing</a></div>
+    <div class="copybox">
+      <div class="ch"><small>Copy &amp; paste — tweak it before you post</small><button class="cp" data-c="fb">Copy</button></div>
+      <pre id="fb">400± Acre Hunting Paradise + Cabin — $1,400,000 (Sandstone, MN)
+
+Private 400-acre retreat at the end of a 1.5-mile dead-end road. Hunting cabin, 40-acre food plot, whitetail untouched ~20 yrs, plus bear, turkey & grouse. ~$7K/yr SFIA income. 30 min to Grand Casino Hinckley.
+
+Photos & maps: 3545UniformSt.com</pre></div>
+    <p class="dl">Photos to post:</p>
+    <div class="thumbs">
+      <a href="michael-images/aerial.jpg" download="3545-aerial.jpg"><img src="michael-images/aerial.jpg" alt=""><span>Aerial</span></a>
+      <a href="michael-images/buck-night.jpg" download="3545-buck-night.jpg"><img src="michael-images/buck-night.jpg" alt=""><span>Big buck</span></a>
+      <a href="michael-images/cabin.jpg" download="3545-cabin.jpg"><img src="michael-images/cabin.jpg" alt=""><span>Cabin</span></a>
+      <a href="michael-images/deer-dusk.jpg" download="3545-deer.jpg"><img src="michael-images/deer-dusk.jpg" alt=""><span>Deer at dusk</span></a>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Minnesota hunting / land groups</h3>
+    <div class="grp"><span class="n">Minnesota Hunting Land (Lease and For Sale)</span><a class="btn btn-line" href="https://www.facebook.com/groups/1377793969694626/" target="_blank">Open</a></div>
+    <div class="grp"><span class="n">Minnesota Land for Sale (LL)</span><a class="btn btn-line" href="https://www.facebook.com/groups/MinnesotaLandforSale/" target="_blank">Open</a></div>
+    <div class="grp"><span class="n">Minnesota &amp; North Dakota Whitetail Properties</span><a class="btn btn-line" href="https://www.facebook.com/minnesotawp/" target="_blank">Open</a></div>
+    <div class="grp"><span class="n">Minnesota Hunting Club</span><a class="btn btn-line" href="https://www.facebook.com/MNHuntingClub/" target="_blank">Open</a></div>
+    <div class="grp"><span class="n">Minnesota Cabins &amp; Lake Homes For Sale by Owner <span style="font-weight:400;color:var(--slate2);font-size:12px">· metro / cabin buyers</span></span><a class="btn btn-line" href="https://www.facebook.com/groups/532712352876661/" target="_blank">Open</a></div>
+    <div class="grp"><span class="n">Lake Homes for Sale in Northern MN <span style="font-weight:400;color:var(--slate2);font-size:12px">· cabin / up-north buyers</span></span><a class="btn btn-line" href="https://www.facebook.com/groups/364482717315330/" target="_blank">Open</a></div>
+    <div class="grp"><span class="n">Twin Cities Minnesota Off-Market Deals <span style="font-weight:400;color:var(--slate2);font-size:12px">· metro reach</span></span><a class="btn btn-line" href="https://www.facebook.com/groups/489733714967164/" target="_blank">Open</a></div>
+    <div class="grp"><span class="n">Find more (search results)</span><a class="btn btn-line" href="https://www.facebook.com/search/groups/?q=minnesota%20hunting%20land%20for%20sale" target="_blank">Search</a></div>
+    <div class="disc">Most groups require you to <b>request to join and be approved</b> before you can post; some ask a registration question, and several only allow for-sale posts on certain days. Read each group's pinned rules first.</div>
+    <div class="copybox">
+      <div class="ch"><small>Copy &amp; paste — edit as you like</small><button class="cp" data-c="grp">Copy</button></div>
+      <pre id="grp">FOR SALE BY OWNER — 400± acres of hunting land + cabin near Sandstone, MN — $1.4M
+
+Untouched whitetail ~20 years, 40-acre food plot, plus bear, turkey & grouse. ~$7K/yr SFIA income, private dead-end road, hunting cabin. 30 min to Grand Casino Hinckley.
+
+Full photos & maps: 3545UniformSt.com — DM with questions.</pre></div>
+  </div>
+</div></section>
+
+<!-- 4 INSTAGRAM -->
+<section><div class="wrap">
+  <h2 class="sec-t"><svg class="pic" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#E1306C"/><rect x="6" y="6" width="12" height="12" rx="4" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="17" cy="7" r="1.1" fill="#fff"/></svg>5 · Instagram</h2>
+  <div class="sec-d">All visuals — no for-sale groups. Reach buyers with strong photos, a Reel, hashtags &amp; a location tag. Tip: post to Facebook and tick "also share to Instagram" to do both at once.</div>
+  <div class="card">
+    <h3>How to post</h3>
+    <ul class="tick">
+      <li>Post a carousel of your best shots (aerial → buck → cabin → field)</li>
+      <li>Make a short Reel from the drone clip if you have one</li>
+      <li>Add the location (Sandstone, MN) and the hashtags below</li>
+      <li>Captions can't have clickable links — put "link in bio" and set your bio link to 3545UniformSt.com</li>
+    </ul>
+    <div class="copybox">
+      <div class="ch"><small>Caption — edit before posting</small><button class="cp" data-c="ig">Copy</button></div>
+      <pre id="ig">400± acres of hunting paradise + cabin near Sandstone, MN. Whitetail untouched ~20 years, a 40-acre food plot, bear, turkey & grouse, and ~$7K/yr SFIA income. For sale by owner — $1.4M.
+
+Full photos, maps & details at 3545UniformSt.com (link in bio).</pre></div>
+    <div class="tags">
+      <div class="ch"><small>Hashtags</small><button class="cp" data-c="hash">Copy</button></div>
+      <div class="body" id="hash">#huntingland #landforsale #whitetail #minnesotahunting #huntingproperty #recreationalland #cabinlife #landforsalebyowner #mnoutdoors #deerhunting #huntingcamp #foodplot #forsalebyowner #ruralland</div>
+    </div>
+    <p class="dl">Photos to post:</p>
+    <div class="thumbs">
+      <a href="michael-images/aerial.jpg" download="3545-aerial.jpg"><img src="michael-images/aerial.jpg" alt=""><span>Aerial</span></a>
+      <a href="michael-images/buck-velvet.jpg" download="3545-buck-velvet.jpg"><img src="michael-images/buck-velvet.jpg" alt=""><span>Velvet buck</span></a>
+      <a href="michael-images/field.jpg" download="3545-field.jpg"><img src="michael-images/field.jpg" alt=""><span>Food plot</span></a>
+      <a href="michael-images/bear.jpg" download="3545-bear.jpg"><img src="michael-images/bear.jpg" alt=""><span>Black bear</span></a>
+    </div>
+  </div>
+</div></section>
+
+<!-- 5 MARKETING MATERIAL -->
+<section><div class="wrap">
+  <h2 class="sec-t">6 · Marketing material</h2>
+  <div class="sec-d">Branded &amp; ready to print — each links to your site by QR.</div>
+
+  <div class="card">
+    <div class="site"><div class="n">Property brochure<small>One-page flyer — photos, highlights &amp; QR</small></div><a class="btn btn-navy" href="brochure.html" target="_blank">Open &amp; save PDF</a></div>
+    <iframe class="frame" src="brochure.html" title="Brochure preview"></iframe>
+  </div>
+
+  <div class="card">
+    <div class="site"><div class="n">Pocket cards<small>10 per sheet — pin to cork boards, hand out</small></div><a class="btn btn-navy" href="pocket-cards.html" target="_blank">Open &amp; save PDF</a></div>
+    <iframe class="frame" src="pocket-cards.html" title="Pocket cards preview" style="height:430px"></iframe>
+  </div>
+  <div class="card">
+    <div class="site" style="border-bottom:none"><div class="n">Get Agents Involved — agent invitation<small>Hand to local buyer's agents (commission set below)</small></div><a class="btn btn-navy" href="agent-brochure.html" target="_blank">Open &amp; save PDF</a></div>
+    <iframe class="frame" src="agent-brochure.html" title="Agent brochure preview"></iframe>
+  </div>
+
+  <div class="card">
+    <h3>Your QR code</h3>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <div id="qr" style="background:#fff;border:1px solid var(--hairline-d);border-radius:8px;padding:8px"></div>
+      <div><p class="note" style="margin-top:0">Links to 3545UniformSt.com — use it on signs, ads &amp; emails.</p><button class="btn btn-line" id="qrdl" style="margin-top:8px">Download QR (PNG)</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Photos chosen for your materials</h3>
+    <p class="note" style="margin-top:0">These are in your brochure &amp; cards. Want different ones? <a href="image-library.html" target="_blank">Open your image library</a> and tell us which to swap — we'll re-render.</p>
+    <div class="thumbs">
+      <a href="michael-images/aerial.jpg" download><img src="michael-images/aerial.jpg" alt=""><span>Aerial</span></a>
+      <a href="michael-images/cabin.jpg" download><img src="michael-images/cabin.jpg" alt=""><span>Cabin</span></a>
+      <a href="michael-images/field.jpg" download><img src="michael-images/field.jpg" alt=""><span>Food plot</span></a>
+      <a href="michael-images/buck-day.jpg" download><img src="michael-images/buck-day.jpg" alt=""><span>Trophy buck</span></a>
+    </div>
+  </div>
+</div></section>
+
+<!-- 6 AGENTS -->
+<section><div class="wrap">
+  <h2 class="sec-t">7 · Get agents involved (recommended for FSBO)</h2>
+  <div class="sec-d">Offering a buyer's-agent commission is one of the best moves a for-sale-by-owner can make.</div>
+  <div class="card">
+    <p style="font-size:15px;color:var(--navy-text)"><b>Why do it:</b> most buyers work with an agent, and agents steer their clients to properties that pay a commission. Offer one and you put 3545 in front of every agent's qualified, ready buyers — not just people browsing online.</p>
+    <ul class="tick" style="margin-top:10px">
+      <li><b>More traffic, real buyers</b> — agents bring pre-qualified clients</li>
+      <li><b>You still save money</b> — you only pay the buyer's side, not the listing side, so roughly half of a traditional 5–6% total</li>
+      <li><b>You keep control</b> — it's still your sale; the agent represents their buyer</li>
+    </ul>
+    <p class="note">Default offer: <b>2.5%</b>, paid at closing to the agent who brings the buyer. Adjust your % anytime — it updates your agent brochure automatically. <a href="agent-brochure.html" target="_blank">Open the agent brochure &rarr;</a></p>
+  </div>
+</div></section>
+
+<!-- 7 SPREAD THE WORD -->
+<section><div class="wrap">
+  <h2 class="sec-t">8 · Spread the word — friends &amp; family</h2>
+  <div class="sec-d">Your own network is the best first marketing. A few easy asks:</div>
+  <div class="card">
+    <ul class="tick">
+      <li>Text 10–15 friends the link (3545UniformSt.com) and ask them to share</li>
+      <li>Post it on your own Facebook &amp; Instagram — people trust a post from you</li>
+      <li>Hand out pocket cards to hunting buddies, neighbors, the coffee &amp; sport shop</li>
+      <li>Ask anyone in real estate or hunting circles to pass it along</li>
+    </ul>
+    <div class="copybox">
+      <div class="ch"><small>Share message — edit as you like</small><button class="cp" data-c="share">Copy</button></div>
+      <pre id="share">We're selling our 400-acre hunting property near Sandstone, MN — cabin, 40-acre food plot, whitetail untouched ~20 years, plus bear & turkey. If you know anyone looking for hunting land, everything's here: 3545UniformSt.com. Please share!</pre></div>
+  </div>
+</div></section>
+
+<!-- 8 RESPONSIVENESS & SAFETY -->
+<section><div class="wrap">
+  <h2 class="sec-t">9 · Responsiveness &amp; staying safe</h2>
+  <div class="sec-d">Fast, careful replies sell faster — and keep the scammers out.</div>
+  <div class="card">
+    <h3>Reply fast</h3>
+    <ul class="tick">
+      <li>Answer inquiries within a few hours — interest cools quickly</li>
+      <li>Keep a saved reply ready: the link plus a line inviting questions</li>
+      <li>Always point people to 3545UniformSt.com for the full story</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Protect yourself from scammers &amp; hucksters</h3>
+    <ul class="tick">
+      <li>Never share bank info, SSN, or wire money to "verify" anything</li>
+      <li>Be wary of anyone who won't talk by phone, overpays, or rushes a deposit</li>
+      <li>Ignore "agents" who promise a buyer for an upfront fee</li>
+      <li>Never accept a check for more than the price (classic overpayment scam)</li>
+      <li>Take earnest money only through a title company or real estate attorney</li>
+      <li>Meet serious buyers in person and bring someone with you to showings</li>
+      <li>Trust your gut — if it feels off, slow down and verify first</li>
+    </ul>
+  </div>
+</div></section>
+
+<!-- 9 PRIVACY -->
+<section><div class="wrap">
+  <h2 class="sec-t">10 · Your privacy &amp; how buyers reach you</h2>
+  <div class="sec-d">Choose how much you want shown publicly. We'll set the site &amp; listings to match.</div>
+  <div class="card">
+    <div class="opt"><div class="r"></div><div class="l"><b>Public</b><p>Show your name and email/phone on the site and materials.</p></div></div>
+    <div class="opt sel"><div class="r"></div><div class="l"><b>First name only</b> <span style="font-size:11px;color:var(--green);font-weight:600">· selected</span><p>Buyers see "Michael," and reach you through a contact form. (Recommended for FSBO.)</p></div></div>
+    <div class="opt"><div class="r"></div><div class="l"><b>Anonymous — contact box only</b><p>No name shown; all inquiries go through a form routed straight to your email.</p></div></div>
+    <p class="note">Tell us your choice and we'll apply it everywhere — site, brochure, and the agent invitation.</p>
+  </div>
+</div></section>
+
+<!-- 10 ACTION ITEMS -->
+<section><div class="wrap">
+  <h2 class="sec-t">11 · Your action items</h2>
+  <div class="card"><ul class="tick">
+    <li>Pick your privacy/contact preference (above)</li>
+    <li>Set your buyer's-agent commission % (default 2.5%) — finalizes your agent brochure</li>
+    <li>Post to the land sites, Zillow FSBO &amp; Facebook Marketplace with the copy above</li>
+    <li>Join the Facebook groups, then post (mind each group's rules)</li>
+    <li>Set up Instagram: bio link to 3545UniformSt.com, then post the carousel</li>
+    <li>Hand out pocket cards; field inquiries; send new photos anytime</li>
+  </ul></div>
+  <p class="note">Need to change the price or details? That's handled in the <b>Listing Details</b> section (separate from this plan) — just request a change and we update everywhere.</p>
+</div></section>
+
+<div class="footnote">Misane Properties &middot; Private &amp; confidential preview</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){var el=document.getElementById('qr');if(el&&window.QRCode){new QRCode(el,{text:"https://3545uniformst.com",width:96,height:96,colorDark:"#0B1A48",colorLight:"#ffffff"});var btn=document.getElementById('qrdl');if(btn)btn.addEventListener('click',function(){var img=el.querySelector('img')||el.querySelector('canvas');if(!img)return;var src=img.tagName==='IMG'?img.src:img.toDataURL();var a=document.createElement('a');a.href=src;a.download='3545-qr.png';a.click();});}})();
+document.querySelectorAll('.cp').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=document.getElementById(b.getAttribute('data-c')).innerText;
+    navigator.clipboard.writeText(t).then(function(){var o=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=o},1500);});
+  });
+});
+</script>
+</body>
+</html>

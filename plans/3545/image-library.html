@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Library — 3545 Uniform St | Misane Properties</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Libre+Franklin:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0B1A48;--navy-text:#14224F;--brass:#B7843C;--paper:#FAF8F3;--slate2:#5C6068;--hairline:#E0D9CC;--hairline-d:#CFC7B7;--display:'Fraunces',Georgia,serif;--body:'Libre Franklin',system-ui,sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);color:#43474E;background:var(--paper)}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--hairline);background:#fff}
+  .bar img{height:34px}
+  .bar .who{font-size:12px;color:var(--slate2)}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 28px}
+  h1{font-family:var(--display);color:var(--navy-text);font-weight:600;font-size:24px}
+  .sub{color:var(--slate2);font-size:14px;margin:6px 0 18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+  .grid a{display:block;text-decoration:none}
+  .grid img{width:100%;height:130px;object-fit:cover;border-radius:8px;border:1px solid var(--hairline-d);filter:saturate(1.2) contrast(1.1) brightness(.98)}
+  .grid span{display:block;font-size:12px;color:var(--slate2);margin-top:4px}
+  .grid a:hover span{color:var(--brass)}
+</style>
+</head>
+<body>
+<div class="bar"><img src="michael-images/logo.png" alt="Misane Properties"><span class="who">Image Library · 3545 Uniform St</span></div>
+<div class="wrap">
+  <h1>Your image library</h1>
+  <p class="sub">Every photo we have for your property. Click any image to download the full-size file. Want one used on the site or brochure? Just tell us which.</p>
+  <div class="grid" id="g"></div>
+</div>
+<script>
+  var imgs=[
+    ["land-aerial-1.jpg","Aerial — field & treeline"],["land-aerial-2.jpg","Aerial — rolling field"],
+    ["field-1.jpg","40-acre food plot"],["cabin.jpg","The cabin / buildings"],
+    ["land-road.jpg","Road in"],["land-driveway.jpg","From the driveway"],
+    ["buck-day-1.jpg","Buck — daylight"],["buck-day-2.jpg","Buck — timber"],["buck-velvet.jpg","Velvet buck + doe"],
+    ["buck-night-1.jpg","Wide buck — night"],["buck-night-2.jpg","Buck — night"],["buck-night-3.jpg","Buck — night"],
+    ["buck-night-4.jpg","Buck — night"],["buck-night-5.jpg","Buck — night"],["deer-dusk.jpg","Deer at dusk"],
+    ["bear-1.jpg","Black bear"],["wildlife-1.jpg","Wildlife"],["wildlife-2.jpg","Wildlife — night"],
+    ["mounts-wall.jpg","Trophy mounts"],["mount-1.jpg","Mounted whitetail"],
+    ["map-boundaries.jpg","Boundary map"],["map-trails.jpg","Trails & access"],["map-aerial.jpg","Aerial map"]
+  ];
+  document.getElementById('g').innerHTML = imgs.map(function(x){
+    return '<a href="michael-images/'+x[0]+'" download><img src="michael-images/'+x[0]+'" alt=""><span>'+x[1]+'</span></a>';
+  }).join('');
+</script>
+</body>
+</html>

@@ -28,6 +28,7 @@ export default function ClientDetail() {
         name: d.name || '', email: d.email || '', phone: d.phone || '',
         property_address: d.property_address || '', domain: d.domain || '',
         scenario: d.scenario || 'fsbo', commission_pct: d.commission_pct || '',
+        plan_embed_url: d.plan_embed_url || '',
       })
       let dr = {}
       try { dr = d.plan_draft ? JSON.parse(d.plan_draft) : {} } catch { dr = {} }
@@ -88,6 +89,8 @@ export default function ClientDetail() {
         <label style={{ marginTop: 12 }}>Property address</label><input value={form.property_address} onChange={(e) => setForm({ ...form, property_address: e.target.value })} />
         <label style={{ marginTop: 12 }}>Domain</label><input value={form.domain} onChange={(e) => setForm({ ...form, domain: e.target.value })} placeholder="3545uniformst.com" />
         <label style={{ marginTop: 12 }}>Buyer-agent commission %</label><input value={form.commission_pct} onChange={(e) => setForm({ ...form, commission_pct: e.target.value })} placeholder="e.g. 2.5%" />
+        <label style={{ marginTop: 12 }}>Published plan URL <span className="muted" style={{ fontWeight: 400 }}>— the produced plan shown in their portal</span></label>
+        <input value={form.plan_embed_url} onChange={(e) => setForm({ ...form, plan_embed_url: e.target.value })} placeholder="/plans/3545/" />
         {err && <div className="error">{err}</div>}
         {saved && <div style={{ color: 'var(--green)', fontSize: 13, marginTop: 8 }}>Saved.</div>}
         <button className="btn btn-navy" style={{ marginTop: 16 }}>Save</button>

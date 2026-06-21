@@ -104,7 +104,7 @@ def init_db():
                           (admin_email, pwd.hash(admin_pw), "admin"))
         # migrate existing DBs: add new columns if missing
         existing = [r[1] for r in c.execute("PRAGMA table_info(clients)").fetchall()]
-        for col in ("email", "phone", "plan_draft", "plan_published", "property_type"):
+        for col in ("email", "phone", "plan_draft", "plan_published", "property_type", "plan_embed_url"):
             if col not in existing:
                 c.execute(f"ALTER TABLE clients ADD COLUMN {col} TEXT")
         c.commit()
@@ -193,6 +193,7 @@ class ClientUpdate(BaseModel):
     domain: str | None = None
     scenario: str | None = None
     commission_pct: str | None = None
+    plan_embed_url: str | None = None     # hosted plan page shown in the client's Marketing Plan tab
 class StatusIn(BaseModel):
     status: str
 class PlanIn(BaseModel):

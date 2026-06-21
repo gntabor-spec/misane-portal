@@ -26,7 +26,13 @@ export default function ClientPortalView({ client, plan, preview = false, onCanc
         </div>
       )}
 
-      {!p ? (
+      {c?.plan_embed_url ? (
+        <iframe
+          title="Your marketing plan"
+          src={c.plan_embed_url}
+          style={{ width: '100%', height: '82vh', border: '1px solid var(--hairline-d)', borderRadius: 'var(--radius)', marginTop: 16, background: '#fff' }}
+        />
+      ) : !p ? (
         <div className="card" style={{ marginTop: 18 }}>
           <b>Your plan is being prepared.</b>
           <p className="muted" style={{ marginTop: 6 }}>We're putting together your marketing plan — it'll appear here shortly.</p>

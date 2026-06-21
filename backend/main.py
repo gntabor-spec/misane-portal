@@ -57,6 +57,8 @@ def init_db():
             stripe_customer TEXT,
             stripe_subscription TEXT,
             plan_started TEXT,                    -- date the $500 was paid (sub anchor)
+            plan_draft TEXT,                      -- marketing plan being edited (admin only)
+            plan_published TEXT,                  -- marketing plan the client sees
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
         """)
@@ -70,7 +72,7 @@ def init_db():
                           (admin_email, pwd.hash(admin_pw), "admin"))
         # migrate existing DBs: add new columns if missing
         existing = [r[1] for r in c.execute("PRAGMA table_info(clients)").fetchall()]
-        for col in ("email", "phone"):
+        for col in ("email", "phone", "plan_draft", "plan_published"):
             if col not in existing:
                 c.execute(f"ALTER TABLE clients ADD COLUMN {col} TEXT")
         c.commit()
@@ -122,6 +124,18 @@ class ClientUpdate(BaseModel):
     commission_pct: str | None = None
 class StatusIn(BaseModel):
     status: str
+class PlanIn(BaseModel):
+    intro: str | None = ""
+    ch_web: str | None = ""
+    ch_specialty: str | None = ""
+    ch_social: str | None = ""
+    ch_realtor: str | None = ""
+    checklist: str | None = ""        # one item per line
+    action_items: str | None = ""     # one item per line
+    brochure_url: str | None = ""
+    cards_url: str | None = ""
+    copy_url: str | None = ""
+    notes: str | None = ""
 
 ALLOWED_STATUS = ["intake", "building", "preview", "approved", "live", "maintenance", "cancelled"]
 
@@ -146,7 +160,11 @@ def me(u=Depends(get_user)):
     if u["client_id"]:
         with closing(db()) as c:
             cl = c.execute("SELECT * FROM clients WHERE id=?", (u["client_id"],)).fetchone()
-        out["client"] = dict(cl) if cl else None
+        if cl:
+            d = dict(cl); d.pop("plan_draft", None)   # clients never see the unpublished draft
+            out["client"] = d
+        else:
+            out["client"] = None
     return out
 
 @app.get("/api/clients")
@@ -183,6 +201,27 @@ def update_client(cid: int, body: ClientUpdate, _=Depends(require_admin)):
             raise HTTPException(404, "Client not found")
         cols = ",".join(f"{k}=?" for k in fields)
         c.execute(f"UPDATE clients SET {cols} WHERE id=?", (*fields.values(), cid))
+        c.commit()
+    return {"ok": True}
+
+@app.post("/api/clients/{cid}/plan")
+def save_plan(cid: int, body: PlanIn, _=Depends(require_admin)):
+    """Save the marketing plan DRAFT (admin only; client doesn't see it yet)."""
+    with closing(db()) as c:
+        if not c.execute("SELECT id FROM clients WHERE id=?", (cid,)).fetchone():
+            raise HTTPException(404, "Client not found")
+        c.execute("UPDATE clients SET plan_draft=? WHERE id=?", (json.dumps(body.model_dump()), cid))
+        c.commit()
+    return {"ok": True}
+
+@app.post("/api/clients/{cid}/plan/publish")
+def publish_plan(cid: int, _=Depends(require_admin)):
+    """Publish the draft → becomes what the client sees."""
+    with closing(db()) as c:
+        r = c.execute("SELECT plan_draft FROM clients WHERE id=?", (cid,)).fetchone()
+        if not r:
+            raise HTTPException(404, "Client not found")
+        c.execute("UPDATE clients SET plan_published=? WHERE id=?", (r["plan_draft"], cid))
         c.commit()
     return {"ok": True}
 

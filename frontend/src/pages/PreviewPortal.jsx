@@ -12,6 +12,10 @@ export default function PreviewPortal() {
 
   useEffect(() => { api.getClient(id).then(setC).catch((e) => setErr(e.message)) }, [id])
 
+  const planRaw = c?.plan_draft || c?.plan_published
+  let plan = null
+  try { plan = planRaw ? JSON.parse(planRaw) : null } catch { plan = null }
+
   return (
     <div>
       <div style={{ background: 'var(--brass)', color: '#fff', textAlign: 'center', padding: '9px', fontSize: 13, fontWeight: 600 }}>
@@ -24,7 +28,7 @@ export default function PreviewPortal() {
           <button className="btn btn-line" onClick={logout}>Sign out</button>
         </header>
         {err && <div className="error">{err}</div>}
-        {c && <ClientPortalView client={c} preview />}
+        {c && <ClientPortalView client={c} plan={plan} preview />}
       </div>
     </div>
   )

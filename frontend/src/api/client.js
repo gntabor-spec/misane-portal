@@ -29,5 +29,7 @@ export const api = {
   setStatus: (cid, status) => req(`/api/clients/${cid}/status`, { method: 'POST', body: JSON.stringify({ status }) }),
   getClient: (cid) => req(`/api/clients/${cid}`),
   deleteClient: (cid) => req(`/api/clients/${cid}/delete`, { method: 'POST' }),
+  savePlan: (cid, body) => req(`/api/clients/${cid}/plan`, { method: 'POST', body: JSON.stringify(body) }),
+  publishPlan: (cid) => req(`/api/clients/${cid}/plan/publish`, { method: 'POST' }),
   updateClient: (cid, body) => req(`/api/clients/${cid}/update`, { method: 'POST', body: JSON.stringify(body) }),
 }

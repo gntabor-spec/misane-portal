@@ -475,6 +475,18 @@ def public_contact(body: ContactIn, background: BackgroundTasks):
     background.add_task(send_email, recipients, f"New inquiry on {dom} — {body.name}", text, body.email)
     return {"ok": True}
 
+@app.get("/api/public/commission")
+def public_commission(domain: str = ""):
+    """Live buyer-agent commission for a property, so its plan/brochure can self-update."""
+    dom = (domain or "").lower().strip().replace("www.", "")
+    pct = ""
+    if dom:
+        with closing(db()) as c:
+            r = c.execute("SELECT commission_pct FROM clients WHERE replace(lower(domain),'www.','')=?", (dom,)).fetchone()
+        if r and r["commission_pct"]:
+            pct = r["commission_pct"]
+    return {"commission_pct": pct or "2.5%"}
+
 # ============================================================
 # M4 — Stripe billing
 # Model: $100 signup + $500 approval cover months 1-2; then $100/mo

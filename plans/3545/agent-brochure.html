@@ -65,7 +65,7 @@
         <h1>400 acres. Bring the buyer.</h1>
       </div>
       <div class="hl">
-        <div class="pct">2.5%</div>
+        <div class="pct" data-commission>2.5%</div>
         <div class="pl">Buyer's-agent commission · paid at closing</div>
         <ul>
           <li>400± acres · private dead-end road</li>
@@ -80,7 +80,7 @@
 
   <div class="body">
     <div class="k2">An invitation to local agents</div>
-    <p class="pitch">This is a for-sale-by-owner property — and buyer's agents are welcome. Bring a qualified buyer to 400± acres of secluded hunting land with a cabin, and earn a full <em>2.5% commission, paid at closing</em>. You represent your client; the owner handles their side. Whitetail untouched nearly twenty years, a 40-acre food plot, plus bear, turkey &amp; grouse.</p>
+    <p class="pitch">This is a for-sale-by-owner property — and buyer's agents are welcome. Bring a qualified buyer to 400± acres of secluded hunting land with a cabin, and earn a full <em><span data-commission>2.5%</span> commission, paid at closing</em>. You represent your client; the owner handles their side. Whitetail untouched nearly twenty years, a 40-acre food plot, plus bear, turkey &amp; grouse.</p>
 
     <div class="gal">
       <figure><img src="michael-images/field.jpg" alt=""><figcaption>The food-plot field</figcaption></figure>
@@ -104,5 +104,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>new QRCode(document.getElementById("qr"),{text:"https://3545uniformst.com",width:118,height:118,colorDark:"#0B1A48",colorLight:"#ffffff"});</script>
+<script>
+fetch('https://app.misaneproperties.com/api/public/commission?domain=3545uniformst.com')
+.then(function(r){return r.json()}).then(function(d){if(d&&d.commission_pct){document.querySelectorAll('[data-commission]').forEach(function(el){el.textContent=d.commission_pct})}}).catch(function(){});
+</script>
 </body>
 </html>

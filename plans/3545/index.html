@@ -288,7 +288,7 @@ Full photos, maps & details at 3545UniformSt.com (link in bio).</pre></div>
       <li><b>You still save money</b> — you only pay the buyer's side, not the listing side, so roughly half of a traditional 5–6% total</li>
       <li><b>You keep control</b> — it's still your sale; the agent represents their buyer</li>
     </ul>
-    <p class="note">Default offer: <b>2.5%</b>, paid at closing to the agent who brings the buyer. Adjust your % anytime — it updates your agent brochure automatically. <a href="agent-brochure.html" target="_blank">Open the agent brochure &rarr;</a></p>
+    <p class="note">Default offer: <b data-commission>2.5%</b>, paid at closing to the agent who brings the buyer. Adjust your % anytime — it updates your agent brochure automatically. <a href="agent-brochure.html" target="_blank">Open the agent brochure &rarr;</a></p>
   </div>
 </div></section>
 
@@ -352,7 +352,7 @@ Full photos, maps & details at 3545UniformSt.com (link in bio).</pre></div>
   <h2 class="sec-t">11 · Your action items</h2>
   <div class="card"><ul class="tick">
     <li>Pick your privacy/contact preference (above)</li>
-    <li>Set your buyer's-agent commission % (default 2.5%) — finalizes your agent brochure</li>
+    <li>Set your buyer's-agent commission % (default <span data-commission>2.5%</span>) — finalizes your agent brochure</li>
     <li>Post to the land sites, Zillow FSBO &amp; Facebook Marketplace with the copy above</li>
     <li>Join the Facebook groups, then post (mind each group's rules)</li>
     <li>Set up Instagram: bio link to 3545UniformSt.com, then post the carousel</li>
@@ -372,6 +372,10 @@ document.querySelectorAll('.cp').forEach(function(b){
     navigator.clipboard.writeText(t).then(function(){var o=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=o},1500);});
   });
 });
+</script>
+<script>
+fetch('https://app.misaneproperties.com/api/public/commission?domain=3545uniformst.com')
+.then(function(r){return r.json()}).then(function(d){if(d&&d.commission_pct){document.querySelectorAll('[data-commission]').forEach(function(el){el.textContent=d.commission_pct})}}).catch(function(){});
 </script>
 </body>
 </html>

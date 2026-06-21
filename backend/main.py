@@ -103,6 +103,10 @@ class ClientIn(BaseModel):
     property_address: str | None = None
     domain: str | None = None
     scenario: str = "fsbo"
+class StatusIn(BaseModel):
+    status: str
+
+ALLOWED_STATUS = ["intake", "building", "preview", "approved", "live", "maintenance", "cancelled"]
 
 # ---- routes ----
 @app.on_event("startup")
@@ -142,6 +146,18 @@ def create_client(body: ClientIn, _=Depends(require_admin)):
         c.commit()
         cid = cur.lastrowid
     return {"id": cid}
+
+@app.post("/api/clients/{cid}/status")
+def set_status(cid: int, body: StatusIn, _=Depends(require_admin)):
+    """Admin override — move a client to any stage (waive/skip)."""
+    if body.status not in ALLOWED_STATUS:
+        raise HTTPException(400, "Invalid status")
+    with closing(db()) as c:
+        if not c.execute("SELECT id FROM clients WHERE id=?", (cid,)).fetchone():
+            raise HTTPException(404, "Client not found")
+        c.execute("UPDATE clients SET status=? WHERE id=?", (body.status, cid))
+        c.commit()
+    return {"ok": True, "status": body.status}
 
 @app.post("/api/clients/{cid}/invite")
 def invite_client(cid: int, email: EmailStr, _=Depends(require_admin)):

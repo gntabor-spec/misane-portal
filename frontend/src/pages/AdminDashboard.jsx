@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../api/client.js'
 
 const EMPTY = { name: '', property_address: '', domain: '', scenario: 'fsbo' }
+const STATUSES = ['intake', 'building', 'preview', 'approved', 'live', 'maintenance', 'cancelled']
 
 export default function AdminDashboard() {
   const { logout } = useAuth()
@@ -24,6 +25,9 @@ export default function AdminDashboard() {
     const email = prompt('Client email for their login?')
     if (!email) return
     try { setInvite(await api.invite(cid, email)) } catch (ex) { alert(ex.message) }
+  }
+  async function changeStatus(cid, status) {
+    try { await api.setStatus(cid, status); load() } catch (ex) { alert(ex.message) }
   }
   async function checkout(cid, kind) {
     try {
@@ -61,7 +65,12 @@ export default function AdminDashboard() {
           <tbody>
             {clients.map((c) => (
               <tr key={c.id} style={{ borderBottom: '1px solid var(--hairline)' }}>
-                <td style={{ padding: 12 }}>{c.name}</td><td>{c.domain || '—'}</td><td>{c.scenario}</td><td>{c.status}</td>
+                <td style={{ padding: 12 }}>{c.name}</td><td>{c.domain || '—'}</td><td>{c.scenario}</td>
+                <td>
+                  <select value={c.status} onChange={(e) => changeStatus(c.id, e.target.value)}>
+                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   <button className="btn btn-line" onClick={() => doInvite(c.id)}>Invite</button>{' '}
                   <button className="btn btn-line" onClick={() => checkout(c.id, 'signup')}>$100</button>{' '}

@@ -417,6 +417,26 @@ async def create_submission(
         background.add_task(send_email, ADMIN_EMAIL, f"Misane portal — new {kind} from {name}", body, u["email"])
     return {"ok": True, "files": saved}
 
+class CommissionIn(BaseModel):
+    commission_pct: str
+
+@app.post("/api/portal/commission")
+def set_commission(body: CommissionIn, background: BackgroundTasks, u=Depends(get_user)):
+    """The owner sets/updates their own buyer-agent commission from their portal."""
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    with closing(db()) as c:
+        cl = c.execute("SELECT name FROM clients WHERE id=?", (cid,)).fetchone()
+        c.execute("UPDATE clients SET commission_pct=? WHERE id=?", (body.commission_pct, cid))
+        c.commit()
+    if ADMIN_EMAIL:
+        background.add_task(send_email, ADMIN_EMAIL,
+            f"Commission updated — {cl['name'] if cl else cid}",
+            f"{u['email']} set the buyer-agent commission to {body.commission_pct}. "
+            f"Update their agent brochure / plan to match.", u["email"])
+    return {"ok": True, "commission_pct": body.commission_pct}
+
 @app.get("/api/clients/{cid}/submissions")
 def list_submissions(cid: int, _=Depends(require_admin)):
     with closing(db()) as c:

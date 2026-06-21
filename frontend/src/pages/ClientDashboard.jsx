@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../api/client.js'
 import ClientPortalView from '../components/ClientPortalView.jsx'
 import UpdateForm from '../components/UpdateForm.jsx'
+import CommissionCard from '../components/CommissionCard.jsx'
 
 export default function ClientDashboard() {
   const { user, logout } = useAuth()
@@ -35,9 +36,12 @@ export default function ClientDashboard() {
         <button className={`tab ${tab === 'update' ? 'tab-on' : ''}`} onClick={() => setTab('update')}>Send an update</button>
       </div>
 
-      {tab === 'plan'
-        ? <ClientPortalView client={c} plan={plan} onCancel={cancel} onApprove={approve} />
-        : <UpdateForm />}
+      {tab === 'plan' ? (
+        <>
+          <ClientPortalView client={c} plan={plan} onCancel={cancel} onApprove={approve} />
+          <CommissionCard client={c} />
+        </>
+      ) : <UpdateForm />}
     </div>
   )
 }

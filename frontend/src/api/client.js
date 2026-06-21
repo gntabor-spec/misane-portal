@@ -27,4 +27,6 @@ export const api = {
   checkoutApproval: (cid) => req(`/api/clients/${cid}/checkout/approval`, { method: 'POST' }),
   cancelSub: (cid) => req(`/api/clients/${cid}/cancel`, { method: 'POST' }),
   setStatus: (cid, status) => req(`/api/clients/${cid}/status`, { method: 'POST', body: JSON.stringify({ status }) }),
+  getClient: (cid) => req(`/api/clients/${cid}`),
+  updateClient: (cid, body) => req(`/api/clients/${cid}/update`, { method: 'POST', body: JSON.stringify(body) }),
 }

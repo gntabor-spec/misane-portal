@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../api/client.js'
 
-const EMPTY = { name: '', property_address: '', domain: '', scenario: 'fsbo' }
+const EMPTY = { name: '', email: '', phone: '', property_address: '', domain: '', scenario: 'fsbo' }
 const STATUSES = ['intake', 'building', 'preview', 'approved', 'live', 'maintenance', 'cancelled']
 
 export default function AdminDashboard() {
@@ -50,12 +51,14 @@ export default function AdminDashboard() {
           <button className="btn btn-line" style={{ marginLeft: 12 }} onClick={() => setInvite(null)}>Dismiss</button>
         </div>
       )}
-      <form onSubmit={add} className="card" style={{ margin: '16px 0', display: 'grid', gridTemplateColumns: 'repeat(4,1fr) auto', gap: 12, alignItems: 'end' }}>
+      <form onSubmit={add} className="card" style={{ margin: '16px 0', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, alignItems: 'end' }}>
         <div><label>Name</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+        <div><label>Email</label><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+        <div><label>Phone</label><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
         <div><label>Property address</label><input value={form.property_address} onChange={(e) => setForm({ ...form, property_address: e.target.value })} /></div>
         <div><label>Domain</label><input value={form.domain} onChange={(e) => setForm({ ...form, domain: e.target.value })} placeholder="3545uniformst.com" /></div>
         <div><label>Scenario</label><select value={form.scenario} onChange={(e) => setForm({ ...form, scenario: e.target.value })}><option value="fsbo">FSBO</option><option value="realtor">Realtor</option></select></div>
-        <button className="btn btn-navy">Add</button>
+        <button className="btn btn-navy" style={{ gridColumn: '1 / -1' }}>Add client</button>
       </form>
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -65,7 +68,7 @@ export default function AdminDashboard() {
           <tbody>
             {clients.map((c) => (
               <tr key={c.id} style={{ borderBottom: '1px solid var(--hairline)' }}>
-                <td style={{ padding: 12 }}>{c.name}</td><td>{c.domain || '—'}</td><td>{c.scenario}</td>
+                <td style={{ padding: 12 }}><Link to={`/admin/clients/${c.id}`} style={{ color: 'var(--brass)', fontWeight: 600 }}>{c.name}</Link></td><td>{c.domain || '—'}</td><td>{c.scenario}</td>
                 <td>
                   <select value={c.status} onChange={(e) => changeStatus(c.id, e.target.value)}>
                     {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}

@@ -47,6 +47,8 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             property_address TEXT,
+            email TEXT,
+            phone TEXT,
             domain TEXT,                          -- their dedicated site, e.g. 3545uniformst.com
             scenario TEXT DEFAULT 'fsbo',         -- 'fsbo' | 'realtor'
             status TEXT DEFAULT 'intake',         -- intake|building|preview|approved|live|maintenance|cancelled
@@ -66,6 +68,11 @@ def init_db():
             if not row:
                 c.execute("INSERT INTO users(email,password_hash,role,must_change_pw) VALUES(?,?,?,0)",
                           (admin_email, pwd.hash(admin_pw), "admin"))
+        # migrate existing DBs: add new columns if missing
+        existing = [r[1] for r in c.execute("PRAGMA table_info(clients)").fetchall()]
+        for col in ("email", "phone"):
+            if col not in existing:
+                c.execute(f"ALTER TABLE clients ADD COLUMN {col} TEXT")
         c.commit()
 
 # ---- auth helpers ----
@@ -101,8 +108,18 @@ class LoginIn(BaseModel):
 class ClientIn(BaseModel):
     name: str
     property_address: str | None = None
+    email: str | None = None
+    phone: str | None = None
     domain: str | None = None
     scenario: str = "fsbo"
+class ClientUpdate(BaseModel):
+    name: str | None = None
+    property_address: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    domain: str | None = None
+    scenario: str | None = None
+    commission_pct: str | None = None
 class StatusIn(BaseModel):
     status: str
 
@@ -141,11 +158,33 @@ def list_clients(_=Depends(require_admin)):
 @app.post("/api/clients")
 def create_client(body: ClientIn, _=Depends(require_admin)):
     with closing(db()) as c:
-        cur = c.execute("INSERT INTO clients(name,property_address,domain,scenario) VALUES(?,?,?,?)",
-                        (body.name, body.property_address, body.domain, body.scenario))
+        cur = c.execute(
+            "INSERT INTO clients(name,property_address,email,phone,domain,scenario) VALUES(?,?,?,?,?,?)",
+            (body.name, body.property_address, body.email, body.phone, body.domain, body.scenario))
         c.commit()
         cid = cur.lastrowid
     return {"id": cid}
+
+@app.get("/api/clients/{cid}")
+def get_client_one(cid: int, _=Depends(require_admin)):
+    with closing(db()) as c:
+        r = c.execute("SELECT * FROM clients WHERE id=?", (cid,)).fetchone()
+    if not r:
+        raise HTTPException(404, "Client not found")
+    return dict(r)
+
+@app.post("/api/clients/{cid}/update")
+def update_client(cid: int, body: ClientUpdate, _=Depends(require_admin)):
+    fields = body.model_dump(exclude_none=True)
+    if not fields:
+        return {"ok": True}
+    with closing(db()) as c:
+        if not c.execute("SELECT id FROM clients WHERE id=?", (cid,)).fetchone():
+            raise HTTPException(404, "Client not found")
+        cols = ",".join(f"{k}=?" for k in fields)
+        c.execute(f"UPDATE clients SET {cols} WHERE id=?", (*fields.values(), cid))
+        c.commit()
+    return {"ok": True}
 
 @app.post("/api/clients/{cid}/status")
 def set_status(cid: int, body: StatusIn, _=Depends(require_admin)):

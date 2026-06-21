@@ -4,12 +4,19 @@ import { api } from '../api/client.js'
 const fmt = (ts) => ts ? new Date(ts * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : null
 
 // Billing tab — see plan status & next charge, update payment method, cancel.
-export default function BillingTab({ client }) {
+export default function BillingTab({ client, preview }) {
   const [b, setB] = useState(null)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
 
-  useEffect(() => { api.getBilling().then(setB).catch((e) => setErr(e.message)) }, [])
+  useEffect(() => { if (!preview) api.getBilling().then(setB).catch((e) => setErr(e.message)) }, [preview])
+
+  if (preview) return (
+    <div className="card" style={{ marginTop: 18, maxWidth: 560 }}>
+      <h3 style={{ marginBottom: 8 }}>Your plan &amp; billing</h3>
+      <p className="muted">In the client’s login this shows their next billing date, card on file, an “Update payment method” button (Stripe portal), and a “Cancel plan” button.</p>
+    </div>
+  )
 
   async function manage() {
     setBusy(true)

@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { api } from '../api/client.js'
 
 // Client-editable buyer-agent commission. The owner controls what they offer agents.
-export default function CommissionCard({ client }) {
+export default function CommissionCard({ client, preview }) {
   const [val, setVal] = useState(client?.commission_pct || '')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
 
   async function save() {
+    if (preview) { setMsg('Preview only — this is interactive in the client’s login.'); return }
     setBusy(true); setMsg('')
     try {
       await api.setCommission(val)

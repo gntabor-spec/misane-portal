@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api } from '../api/client.js'
 
 // Stage 2: client reviews their draft (non-public) site, then approves → $500, or sends feedback.
-export default function ReviewStage({ client, onApprove }) {
+export default function ReviewStage({ client, onApprove, preview }) {
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(false)
@@ -10,6 +10,7 @@ export default function ReviewStage({ client, onApprove }) {
 
   async function sendFeedback(e) {
     e.preventDefault()
+    if (preview) { alert('Preview only — this is interactive in the client’s login.'); return }
     if (!msg.trim()) { setErr('Add your feedback first.'); return }
     setBusy(true); setErr('')
     try {

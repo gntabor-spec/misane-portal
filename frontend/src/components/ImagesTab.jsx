@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api } from '../api/client.js'
 
 // Images tab — owner uploads new/updated photos and video for their site.
-export default function ImagesTab() {
+export default function ImagesTab({ preview }) {
   const [files, setFiles] = useState([])
   const [caption, setCaption] = useState('')
   const [busy, setBusy] = useState(false)
@@ -11,6 +11,7 @@ export default function ImagesTab() {
 
   async function submit(e) {
     e.preventDefault()
+    if (preview) { alert('Preview only — this is interactive in the client’s login.'); return }
     setErr('')
     if (files.length === 0) { setErr('Choose at least one image or video.'); return }
     setBusy(true)

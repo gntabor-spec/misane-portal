@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api } from '../api/client.js'
 
 // Request Changes tab — owner asks for edits to their site/plan/materials.
-export default function RequestChangesTab() {
+export default function RequestChangesTab({ preview }) {
   const [message, setMessage] = useState('')
   const [files, setFiles] = useState([])
   const [busy, setBusy] = useState(false)
@@ -11,6 +11,7 @@ export default function RequestChangesTab() {
 
   async function submit(e) {
     e.preventDefault()
+    if (preview) { alert('Preview only — this is interactive in the client’s login.'); return }
     setErr('')
     if (!message.trim()) { setErr('Tell us what you’d like changed.'); return }
     setBusy(true)

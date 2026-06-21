@@ -1,7 +1,7 @@
 import CommissionCard from './CommissionCard.jsx'
 
 // Marketing Plan tab (live stage). The full plan opens as its OWN page (no nested iframe).
-export default function PlanTab({ client }) {
+export default function PlanTab({ client, preview }) {
   const c = client
   return (
     <div>
@@ -21,7 +21,7 @@ export default function PlanTab({ client }) {
         </div>
       )}
 
-      <CommissionCard client={c} />
+      <CommissionCard client={c} preview={preview} />
     </div>
   )
 }

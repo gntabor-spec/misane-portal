@@ -52,8 +52,8 @@
 </head>
 <body>
 <div class="toolbar">
-  <span class="t">Hand or email this to local buyer's agents. Print → "Save as PDF" to download.</span>
-  <button class="btn" onclick="window.print()">Save as PDF / Print</button>
+  <span class="t">Hand or email this to local buyer's agents. Click Download for a print-ready PDF.</span>
+  <button class="btn" onclick="dl()">Download PDF</button>
 </div>
 
 <div class="page">
@@ -108,5 +108,7 @@
 fetch('https://app.misaneproperties.com/api/public/commission?domain=3545uniformst.com')
 .then(function(r){return r.json()}).then(function(d){if(d&&d.commission_pct){document.querySelectorAll('[data-commission]').forEach(function(el){el.textContent=d.commission_pct})}}).catch(function(){});
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>function dl(){document.fonts.ready.then(function(){html2pdf().set({margin:0,filename:'3545-agent-brochure.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'in',format:'letter',orientation:'portrait'}}).from(document.querySelector('.page')).save();});}</script>
 </body>
 </html>

@@ -1,23 +1,25 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../api/client.js'
-import ClientPortalView from '../components/ClientPortalView.jsx'
-import UpdateForm from '../components/UpdateForm.jsx'
-import CommissionCard from '../components/CommissionCard.jsx'
+import PlanTab from '../components/PlanTab.jsx'
+import ImagesTab from '../components/ImagesTab.jsx'
+import RequestChangesTab from '../components/RequestChangesTab.jsx'
+import BillingTab from '../components/BillingTab.jsx'
+
+const TABS = [
+  ['plan', 'Marketing plan'],
+  ['images', 'Images'],
+  ['changes', 'Request changes'],
+  ['billing', 'Billing'],
+]
 
 export default function ClientDashboard() {
   const { user, logout } = useAuth()
   const c = user?.client
   const [tab, setTab] = useState('plan')
-  let plan = null
-  try { plan = c?.plan_published ? JSON.parse(c.plan_published) : null } catch { plan = null }
 
-  async function cancel() {
-    if (!confirm('Cancel your subscription? It ends at the close of the current period; your last payment covers the coming month.')) return
-    try { await api.cancelSub(c.id); alert('Cancellation requested — we’ll confirm by email.') } catch (ex) { alert(ex.message) }
-  }
   async function approve() {
-    if (!confirm('Approve your draft site and continue to the $500 build fee?')) return
+    if (!confirm('Approve your draft and continue to the $500 build fee?')) return
     try { const r = await api.checkoutApproval(c.id); window.location.href = r.url } catch (ex) { alert(ex.message) }
   }
 
@@ -31,17 +33,23 @@ export default function ClientDashboard() {
         </div>
       </header>
 
-      <div className="tabs">
-        <button className={`tab ${tab === 'plan' ? 'tab-on' : ''}`} onClick={() => setTab('plan')}>Marketing plan</button>
-        <button className={`tab ${tab === 'update' ? 'tab-on' : ''}`} onClick={() => setTab('update')}>Send an update</button>
+      <div className="kicker">Client Portal</div>
+      <h1 style={{ marginTop: 6 }}>{c?.name || 'Your property'}</h1>
+      {c?.property_address && <p className="muted" style={{ marginTop: 6 }}>{c.property_address}</p>}
+      {c?.domain && (
+        <p style={{ marginTop: 6 }}><b>Your site:</b> <a href={`https://${c.domain}`} target="_blank" rel="noopener">{c.domain}</a></p>
+      )}
+
+      <div className="tabs" style={{ marginTop: 16 }}>
+        {TABS.map(([k, label]) => (
+          <button key={k} className={`tab ${tab === k ? 'tab-on' : ''}`} onClick={() => setTab(k)}>{label}</button>
+        ))}
       </div>
 
-      {tab === 'plan' ? (
-        <>
-          <ClientPortalView client={c} plan={plan} onCancel={cancel} onApprove={approve} />
-          <CommissionCard client={c} />
-        </>
-      ) : <UpdateForm />}
+      {tab === 'plan' && <PlanTab client={c} onApprove={approve} />}
+      {tab === 'images' && <ImagesTab />}
+      {tab === 'changes' && <RequestChangesTab />}
+      {tab === 'billing' && <BillingTab client={c} />}
     </div>
   )
 }

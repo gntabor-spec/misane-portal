@@ -635,6 +635,40 @@ def cancel_subscription(cid: int, u=Depends(get_user)):
     _set_client(cid, status="cancelling")
     return {"ok": True, "message": "Subscription will end at the close of the current period."}
 
+@app.get("/api/portal/billing")
+def portal_billing(u=Depends(get_user)):
+    """What the client sees on their Billing tab: status, next charge date, card on file."""
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    cl = _client_or_404(cid)
+    out = {"status": cl.get("status"), "plan_started": cl.get("plan_started"),
+           "has_subscription": bool(cl.get("stripe_subscription")),
+           "amount": "$100.00 / month", "next_billing_date": None, "card_last4": None}
+    if cl.get("stripe_subscription") and stripe.api_key:
+        try:
+            sub = stripe.Subscription.retrieve(cl["stripe_subscription"], expand=["default_payment_method"])
+            out["next_billing_date"] = sub.get("current_period_end")
+            out["sub_status"] = sub.get("status")
+            pm = sub.get("default_payment_method")
+            if pm and pm.get("card"):
+                out["card_last4"] = pm["card"]["last4"]
+        except Exception as e:
+            print("[billing retrieve error]", e)
+    return out
+
+@app.post("/api/portal/billing-portal")
+def portal_billing_portal(u=Depends(get_user)):
+    """Open Stripe's secure customer portal — update card, view invoices, cancel."""
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    cl = _client_or_404(cid)
+    if not cl.get("stripe_customer") or not stripe.api_key:
+        raise HTTPException(400, "No billing account yet")
+    s = stripe.billing_portal.Session.create(customer=cl["stripe_customer"], return_url=f"{APP_URL}/portal")
+    return {"url": s.url}
+
 @app.post("/api/stripe/webhook")
 async def stripe_webhook(request: Request):
     payload = await request.body()

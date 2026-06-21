@@ -28,7 +28,7 @@
 <body>
 <div class="toolbar">
   <span class="t">Print on cardstock (Letter), then cut on the dashed lines — 10 cards. Pin to cork boards at gas stations, sport shops, cafés; hand to friends. Each scans to your site.</span>
-  <button class="btn" onclick="window.print()">Save as PDF / Print</button>
+  <button class="btn" onclick="dl()">Download PDF</button>
 </div>
 
 <div class="sheet" id="sheet"></div>
@@ -50,5 +50,7 @@
     document.getElementById('sheet').innerHTML = new Array(10).fill(card).join('')
   }, 250)
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>function dl(){document.fonts.ready.then(function(){html2pdf().set({margin:0,filename:'3545-pocket-cards.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'in',format:'letter',orientation:'portrait'}}).from(document.querySelector('.sheet')).save();});}</script>
 </body>
 </html>

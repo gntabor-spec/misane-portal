@@ -48,6 +48,8 @@ export const api = {
   setCommission: (pct) => req('/api/portal/commission', { method: 'POST', body: JSON.stringify({ commission_pct: pct }) }),
   listSubmissions: (cid) => req(`/api/clients/${cid}/submissions`),
   adminOverview: () => req('/api/admin/overview'),
+  getBilling: () => req('/api/portal/billing'),
+  billingPortal: () => req('/api/portal/billing-portal', { method: 'POST' }),
   publicSignup: (formData) => reqForm('/api/public/signup', formData),
   publicContact: (b) => req('/api/public/contact', { method: 'POST', body: JSON.stringify(b) }),
 }

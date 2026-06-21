@@ -25,6 +25,12 @@ export default function AdminDashboard() {
     if (!email) return
     try { setInvite(await api.invite(cid, email)) } catch (ex) { alert(ex.message) }
   }
+  async function checkout(cid, kind) {
+    try {
+      const r = kind === 'signup' ? await api.checkoutSignup(cid) : await api.checkoutApproval(cid)
+      window.open(r.url, '_blank')   // opens the Stripe checkout; copy the URL to send to the client
+    } catch (ex) { alert(ex.message) }
+  }
 
   return (
     <div className="wrap">
@@ -56,7 +62,11 @@ export default function AdminDashboard() {
             {clients.map((c) => (
               <tr key={c.id} style={{ borderBottom: '1px solid var(--hairline)' }}>
                 <td style={{ padding: 12 }}>{c.name}</td><td>{c.domain || '—'}</td><td>{c.scenario}</td><td>{c.status}</td>
-                <td><button className="btn btn-line" onClick={() => doInvite(c.id)}>Invite login</button></td>
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  <button className="btn btn-line" onClick={() => doInvite(c.id)}>Invite</button>{' '}
+                  <button className="btn btn-line" onClick={() => checkout(c.id, 'signup')}>$100</button>{' '}
+                  <button className="btn btn-line" onClick={() => checkout(c.id, 'approval')}>$500</button>
+                </td>
               </tr>
             ))}
             {!clients.length && <tr><td colSpan="5" style={{ padding: 16 }} className="muted">No clients yet — add one above.</td></tr>}

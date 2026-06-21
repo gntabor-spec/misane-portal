@@ -1,8 +1,14 @@
 import { useAuth } from '../context/AuthContext.jsx'
+import { api } from '../api/client.js'
 
 export default function ClientDashboard() {
   const { user, logout } = useAuth()
   const c = user?.client
+
+  async function cancel() {
+    if (!confirm('Cancel your subscription? It ends at the close of the current period; your last payment covers the coming month.')) return
+    try { await api.cancelSub(c.id); alert('Cancellation requested — we’ll confirm by email.') } catch (ex) { alert(ex.message) }
+  }
 
   return (
     <div className="wrap">
@@ -19,6 +25,11 @@ export default function ClientDashboard() {
           Your dashboard — intake, preview & approval, downloads, photos, and your subscription —
           appears here as we move through your setup.
         </p>
+        {c?.stripe_subscription && (
+          <div style={{ marginTop: 14 }}>
+            <button className="btn btn-line" onClick={cancel}>Cancel subscription</button>
+          </div>
+        )}
       </div>
     </div>
   )

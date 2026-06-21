@@ -157,3 +157,132 @@ def invite_client(cid: int, email: EmailStr, _=Depends(require_admin)):
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A login with that email already exists")
     return {"email": email, "temp_password": temp}  # TODO M3: email this automatically
+
+# ============================================================
+# M4 — Stripe billing
+# Model: $100 signup + $500 approval cover months 1-2; then $100/mo
+# starting ~2 months after the $500, capped at 12 months (~10 charges).
+# ============================================================
+import time as _time
+import stripe
+from fastapi import Request
+
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+APP_URL = os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com")
+_price_cache = {}
+
+def _client_or_404(cid):
+    with closing(db()) as c:
+        r = c.execute("SELECT * FROM clients WHERE id=?", (cid,)).fetchone()
+    if not r:
+        raise HTTPException(404, "Client not found")
+    return dict(r)
+
+def _set_client(cid, **fields):
+    cols = ",".join(f"{k}=?" for k in fields)
+    with closing(db()) as c:
+        c.execute(f"UPDATE clients SET {cols} WHERE id=?", (*fields.values(), cid))
+        c.commit()
+
+def _monthly_price():
+    """Create or reuse a $100/mo recurring price (so Greg needn't make products by hand)."""
+    if _price_cache.get("m"):
+        return _price_cache["m"]
+    prod = None
+    for p in stripe.Product.list(limit=100).auto_paging_iter():
+        if (p.get("metadata") or {}).get("misane") == "monthly":
+            prod = p; break
+    if not prod:
+        prod = stripe.Product.create(name="Misane Properties — Monthly", metadata={"misane": "monthly"})
+    for pr in stripe.Price.list(product=prod.id, active=True, limit=100).auto_paging_iter():
+        if pr.unit_amount == 10000 and pr.recurring and pr.recurring.interval == "month":
+            _price_cache["m"] = pr.id; return pr.id
+    pr = stripe.Price.create(product=prod.id, unit_amount=10000, currency="usd", recurring={"interval": "month"})
+    _price_cache["m"] = pr.id
+    return pr.id
+
+def _ensure_customer(cl):
+    if cl.get("stripe_customer"):
+        return cl["stripe_customer"]
+    cust = stripe.Customer.create(name=cl["name"], metadata={"client_id": str(cl["id"])})
+    _set_client(cl["id"], stripe_customer=cust.id)
+    return cust.id
+
+@app.post("/api/clients/{cid}/checkout/signup")
+def checkout_signup(cid: int, _=Depends(require_admin)):
+    _client_or_404(cid)
+    s = stripe.checkout.Session.create(
+        mode="payment",
+        line_items=[{"price_data": {"currency": "usd", "unit_amount": 10000,
+                     "product_data": {"name": "Misane Properties — Signup deposit"}}, "quantity": 1}],
+        success_url=f"{APP_URL}/portal?paid=signup", cancel_url=f"{APP_URL}/portal",
+        metadata={"client_id": str(cid), "kind": "signup"},
+    )
+    return {"url": s.url}
+
+@app.post("/api/clients/{cid}/checkout/approval")
+def checkout_approval(cid: int, _=Depends(require_admin)):
+    cl = _client_or_404(cid)
+    cust = _ensure_customer(cl)
+    s = stripe.checkout.Session.create(
+        mode="payment", customer=cust,
+        line_items=[{"price_data": {"currency": "usd", "unit_amount": 50000,
+                     "product_data": {"name": "Misane Properties — Build approval (months 1–2)"}}, "quantity": 1}],
+        payment_intent_data={"setup_future_usage": "off_session"},   # save card for the subscription
+        success_url=f"{APP_URL}/portal?paid=approval", cancel_url=f"{APP_URL}/portal",
+        metadata={"client_id": str(cid), "kind": "approval"},
+    )
+    return {"url": s.url}
+
+@app.post("/api/clients/{cid}/cancel")
+def cancel_subscription(cid: int, u=Depends(get_user)):
+    cl = _client_or_404(cid)
+    if u["role"] != "admin" and u.get("client_id") != cid:
+        raise HTTPException(403, "Forbidden")
+    if not cl.get("stripe_subscription"):
+        raise HTTPException(400, "No active subscription")
+    stripe.Subscription.modify(cl["stripe_subscription"], cancel_at_period_end=True)
+    _set_client(cid, status="cancelling")
+    return {"ok": True, "message": "Subscription will end at the close of the current period."}
+
+@app.post("/api/stripe/webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature", "")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
+    except Exception:
+        raise HTTPException(400, "Invalid signature")
+    typ = event["type"]
+    obj = event["data"]["object"]
+    if typ == "checkout.session.completed":
+        meta = obj.get("metadata") or {}
+        cid = int(meta.get("client_id") or 0)
+        kind = meta.get("kind")
+        if cid and kind == "signup":
+            _set_client(cid, status="building")
+        elif cid and kind == "approval":
+            cust = obj.get("customer")
+            pm = None
+            if obj.get("payment_intent"):
+                pi = stripe.PaymentIntent.retrieve(obj["payment_intent"])
+                pm = pi.payment_method
+            now = int(_time.time())
+            sub = stripe.Subscription.create(
+                customer=cust,
+                items=[{"price": _monthly_price()}],
+                trial_end=now + 60 * 24 * 3600,        # first $100 ~2 months out
+                cancel_at=now + 365 * 24 * 3600,        # cap at 12 months
+                default_payment_method=pm,
+                metadata={"client_id": str(cid)},
+            )
+            _set_client(cid, stripe_subscription=sub.id, status="live",
+                        plan_started=datetime.date.today().isoformat())
+    elif typ == "customer.subscription.deleted":
+        sid = obj.get("id")
+        with closing(db()) as c:
+            row = c.execute("SELECT id FROM clients WHERE stripe_subscription=?", (sid,)).fetchone()
+        if row:
+            _set_client(row["id"], status="cancelled")
+    return {"received": True}

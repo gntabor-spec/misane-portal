@@ -23,4 +23,7 @@ export const api = {
   listClients: () => req('/api/clients'),
   createClient: (b) => req('/api/clients', { method: 'POST', body: JSON.stringify(b) }),
   invite: (cid, email) => req(`/api/clients/${cid}/invite?email=${encodeURIComponent(email)}`, { method: 'POST' }),
+  checkoutSignup: (cid) => req(`/api/clients/${cid}/checkout/signup`, { method: 'POST' }),
+  checkoutApproval: (cid) => req(`/api/clients/${cid}/checkout/approval`, { method: 'POST' }),
+  cancelSub: (cid) => req(`/api/clients/${cid}/cancel`, { method: 'POST' }),
 }

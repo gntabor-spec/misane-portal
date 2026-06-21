@@ -1,10 +1,10 @@
 // The "here's how it works" + billing terms, shown on the signup page and the thank-you page.
 const STEPS = [
-  ['Pay $100 to start', 'A refundable-effort deposit that kicks off your build. Nothing else is due yet.'],
-  ['We build your draft site', 'We turn your photos and story into a dedicated property website — your draft.'],
-  ['You review & approve', 'See the draft in your portal. Approve it and you’re prompted for the $500 build fee.'],
-  ['Your packet + site go live', 'Once the $500 is paid, you get your full Marketing Packet and your site goes live.'],
-  ['Keep it fresh', 'Request changes and add new photos, video, or content anytime from your portal.'],
+  ['Kick the project off — $100', 'A deposit that starts your build. We turn your photos and story into a dedicated draft website for your approval.'],
+  ['Review & approve your site', 'See the draft in your portal. Approve it, or send changes for another round.'],
+  ['Go live — $500 for 3 months', 'On approval, you get your live website, your full marketing plan, and a portal to manage everything.'],
+  ['Keep it going — $59/month', 'After the first 3 months, keep your site live up to 12 months total, with 2 site updates a month, billed automatically.'],
+  ['Cancel anytime after 3 months', 'You’re free to cancel anytime after the first three months. Maximum term is 12 months.'],
 ]
 
 export default function ProcessSteps() {
@@ -24,9 +24,10 @@ export default function ProcessSteps() {
       <div className="card" style={{ background: 'var(--greige)', marginTop: 8 }}>
         <b style={{ color: 'var(--navy-text)' }}>The billing, plainly</b>
         <p className="muted" style={{ marginTop: 6 }}>
-          The $500 covers your first two months. After that, your card is billed $100/month for up to 10 months —
-          one each month — through the one-year mark from your $500 payment. You can cancel anytime after the first
-          two months. Change your mind after the $100? No further payment is required — but your site won’t go live.
+          The $100 kicks off your draft (non-refundable). The $500 on approval covers your first three months —
+          your live site, full marketing plan, and portal. After three months it’s $59/month (includes two site
+          updates a month), billed automatically, for up to 12 months total. Cancel anytime after the first three
+          months. Change your mind after the $100? No further payment is required — but your site won’t go live.
         </p>
       </div>
     </div>

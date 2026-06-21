@@ -636,9 +636,9 @@ def _monthly_price():
     if not prod:
         prod = stripe.Product.create(name="Misane Properties — Monthly", metadata={"misane": "monthly"})
     for pr in stripe.Price.list(product=prod.id, active=True, limit=100).auto_paging_iter():
-        if pr.unit_amount == 10000 and pr.recurring and pr.recurring.interval == "month":
+        if pr.unit_amount == 5900 and pr.recurring and pr.recurring.interval == "month":
             _price_cache["m"] = pr.id; return pr.id
-    pr = stripe.Price.create(product=prod.id, unit_amount=10000, currency="usd", recurring={"interval": "month"})
+    pr = stripe.Price.create(product=prod.id, unit_amount=5900, currency="usd", recurring={"interval": "month"})
     _price_cache["m"] = pr.id
     return pr.id
 
@@ -652,7 +652,7 @@ def _ensure_customer(cl):
 def _signup_session(cid, success_url, cancel_url):
     return stripe.checkout.Session.create(
         mode="payment",
-        line_items=[{"price_data": {"currency": "usd", "unit_amount": 10000,
+        line_items=[{"price_data": {"currency": "usd", "unit_amount": 9900,
                      "product_data": {"name": "Misane Properties — Signup deposit"}}, "quantity": 1}],
         success_url=success_url, cancel_url=cancel_url,
         metadata={"client_id": str(cid), "kind": "signup"},
@@ -671,24 +671,43 @@ async def public_signup(
     last_name: str = Form(""),
     email: str = Form(...),
     phone: str = Form(""),
+    owner_address: str = Form(""),
+    owner_city: str = Form(""),
+    owner_state: str = Form(""),
+    owner_zip: str = Form(""),
+    same_as_property: str = Form("yes"),
+    prop_address: str = Form(""),
+    prop_city: str = Form(""),
+    prop_state: str = Form(""),
+    prop_zip: str = Form(""),
     property_type: str = Form(""),
     property_subtype: str = Form(""),
     listed_with_agent: str = Form(""),
     listing_ref: str = Form(""),
-    address: str = Form(""),
-    city: str = Form(""),
-    state: str = Form(""),
-    zip_code: str = Form(""),
+    price: str = Form(""),
+    beds: str = Form(""),
+    baths: str = Form(""),
+    sqft: str = Form(""),
+    lot: str = Form(""),
+    year_built: str = Form(""),
     description: str = Form(""),
+    accept_terms: str = Form(""),
     files: list[UploadFile] = File(default=[]),
 ):
     """Public funnel: prospect submits property + photos, then pays the $100 deposit."""
+    if accept_terms.lower() not in ("yes", "true", "1"):
+        raise HTTPException(400, "Please accept the Terms to continue.")
     name = (first_name.strip() + " " + last_name.strip()).strip() or email
-    property_address = ", ".join([p for p in [address.strip(), city.strip(), (state + " " + zip_code).strip()] if p])
+    same = same_as_property.lower() in ("yes", "true", "1")
+    pa, pc, ps, pz = (owner_address, owner_city, owner_state, owner_zip) if same else (prop_address, prop_city, prop_state, prop_zip)
+    property_address = ", ".join([p for p in [pa.strip(), pc.strip(), (ps + " " + pz).strip()] if p])
     intake = {"property_type": property_type, "property_subtype": property_subtype,
               "listed_with_agent": listed_with_agent, "listing_ref": listing_ref,
               "first_name": first_name, "last_name": last_name,
-              "address": address, "city": city, "state": state, "zip": zip_code,
+              "owner_address": {"address": owner_address, "city": owner_city, "state": owner_state, "zip": owner_zip},
+              "same_as_property": same,
+              "property_address": {"address": pa, "city": pc, "state": ps, "zip": pz},
+              "details": {"price": price, "beds": beds, "baths": baths, "sqft": sqft, "lot": lot, "year_built": year_built},
               "description": description}
     scenario = "realtor" if listed_with_agent.lower() in ("yes", "true", "1") else "fsbo"
     with closing(db()) as c:
@@ -716,10 +735,13 @@ async def public_signup(
                       (cid, email, "signup", description, json.dumps(saved)))
             c.commit()
     if ADMIN_EMAIL:
+        det = "" if listed_with_agent.lower() in ("yes", "true", "1") else \
+            f"Price: {price or 'n/a'} · Beds {beds or '-'} · Baths {baths or '-'} · SqFt {sqft or '-'} · Lot {lot or '-'} · Year {year_built or '-'}\n"
         body = (f"New signup from {name} <{email}> ({phone or 'no phone'}).\n"
                 f"Type: {property_type} {property_subtype}\n"
                 f"Listed with agent: {listed_with_agent or 'no'}" + (f" — {listing_ref}" if listing_ref else "") + "\n"
-                f"Address: {property_address or 'n/a'}\n\nWhy they love it:\n{description or '(none)'}\n\n"
+                f"Property: {property_address or 'n/a'}\n" + det +
+                f"\nWhy they love it:\n{description or '(none)'}\n\n"
                 f"Photos ({len(saved)}): " + (", ".join(saved) if saved else "none"))
         background.add_task(send_email, ADMIN_EMAIL, f"New Misane signup — {name}", body, email)
     checkout_url = None
@@ -739,7 +761,7 @@ def checkout_approval(cid: int, u=Depends(get_user)):
     s = stripe.checkout.Session.create(
         mode="payment", customer=cust,
         line_items=[{"price_data": {"currency": "usd", "unit_amount": 50000,
-                     "product_data": {"name": "Misane Properties — Build approval (months 1–2)"}}, "quantity": 1}],
+                     "product_data": {"name": "Misane Properties — Build approval (first 3 months)"}}, "quantity": 1}],
         payment_intent_data={"setup_future_usage": "off_session"},   # save card for the subscription
         success_url=f"{APP_URL}/portal?paid=approval", cancel_url=f"{APP_URL}/portal",
         metadata={"client_id": str(cid), "kind": "approval"},
@@ -766,7 +788,7 @@ def portal_billing(u=Depends(get_user)):
     cl = _client_or_404(cid)
     out = {"status": cl.get("status"), "plan_started": cl.get("plan_started"),
            "has_subscription": bool(cl.get("stripe_subscription")),
-           "amount": "$100.00 / month", "next_billing_date": None, "card_last4": None}
+           "amount": "$59.00 / month", "next_billing_date": None, "card_last4": None}
     if cl.get("stripe_subscription") and stripe.api_key:
         try:
             sub = stripe.Subscription.retrieve(cl["stripe_subscription"], expand=["default_payment_method"])
@@ -817,8 +839,8 @@ async def stripe_webhook(request: Request):
             sub = stripe.Subscription.create(
                 customer=cust,
                 items=[{"price": _monthly_price()}],
-                trial_end=now + 60 * 24 * 3600,        # first $100 ~2 months out
-                cancel_at=now + 365 * 24 * 3600,        # cap at 12 months
+                trial_end=now + 90 * 24 * 3600,        # $59/mo starts after the 3-month period
+                cancel_at=now + 365 * 24 * 3600,        # cap at 12 months total
                 default_payment_method=pm,
                 metadata={"client_id": str(cid)},
             )

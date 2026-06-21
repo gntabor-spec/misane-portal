@@ -39,7 +39,7 @@ export default function BillingTab({ client, preview }) {
           {b.next_billing_date && <p style={{ marginTop: 6 }}><b>Next billing date:</b> {fmt(b.next_billing_date)}</p>}
           {b.card_last4 && <p style={{ marginTop: 6 }}><b>Card on file:</b> •••• {b.card_last4}</p>}
           <p className="muted" style={{ marginTop: 10 }}>
-            You can cancel anytime after the first two months — your last payment covers the coming month.
+            You can cancel anytime after the first three months — your last payment covers the coming month.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
             <button className="btn btn-navy" onClick={manage} disabled={busy}>Update payment method ↗</button>

@@ -1,8 +1,5 @@
-import CommissionCard from './CommissionCard.jsx'
-
-// Marketing Plan tab — plan shown inline, in the same window. The tab menu stays
-// above it for navigation. The iframe fills the window so it's a single scroll.
-export default function PlanTab({ client, preview }) {
+// Marketing Plan tab — the plan fills the tab full-bleed (same window), tab menu stays above.
+export default function PlanTab({ client }) {
   const c = client
 
   if (!c?.plan_embed_url) {
@@ -15,16 +12,10 @@ export default function PlanTab({ client, preview }) {
   }
 
   return (
-    <div>
-      <iframe
-        title="Your marketing plan"
-        src={c.plan_embed_url}
-        style={{
-          display: 'block', width: '100%', height: 'calc(100vh - 300px)', minHeight: 500,
-          marginTop: 14, border: '1px solid var(--hairline-d)', borderRadius: 'var(--radius)', background: '#fff',
-        }}
-      />
-      <CommissionCard client={c} preview={preview} />
-    </div>
+    <iframe
+      title="Your marketing plan"
+      src={c.plan_embed_url}
+      style={{ display: 'block', width: '100%', height: 'calc(100vh - 230px)', minHeight: 500, marginTop: 10, border: 'none', background: '#fff' }}
+    />
   )
 }

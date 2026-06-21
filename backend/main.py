@@ -449,6 +449,105 @@ def set_commission(body: CommissionIn, background: BackgroundTasks, u=Depends(ge
             f"Update their agent brochure / plan to match.", u["email"])
     return {"ok": True, "commission_pct": body.commission_pct}
 
+# ---- Account tab: client manages their own profile, password, people, images ----
+class ProfileIn(BaseModel):
+    name: str | None = None
+    phone: str | None = None
+    property_address: str | None = None
+
+@app.post("/api/portal/profile")
+def portal_profile(body: ProfileIn, u=Depends(get_user)):
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    fields = {k: v for k, v in body.model_dump().items() if v is not None}
+    if fields:
+        with closing(db()) as c:
+            cols = ",".join(f"{k}=?" for k in fields)
+            c.execute(f"UPDATE clients SET {cols} WHERE id=?", (*fields.values(), cid)); c.commit()
+    return {"ok": True}
+
+class PasswordIn(BaseModel):
+    new_password: str
+
+@app.post("/api/portal/password")
+def portal_password(body: PasswordIn, u=Depends(get_user)):
+    if len(body.new_password) < 8:
+        raise HTTPException(400, "Use at least 8 characters.")
+    with closing(db()) as c:
+        c.execute("UPDATE users SET password_hash=?, must_change_pw=0 WHERE id=?",
+                  (pwd.hash(body.new_password), u["id"])); c.commit()
+    return {"ok": True}
+
+@app.get("/api/portal/people")
+def portal_people(u=Depends(get_user)):
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    with closing(db()) as c:
+        rows = c.execute("SELECT id, email, must_change_pw FROM users WHERE client_id=? ORDER BY created_at", (cid,)).fetchall()
+    return [dict(r) for r in rows]
+
+class PersonIn(BaseModel):
+    email: EmailStr
+
+@app.post("/api/portal/people")
+def portal_add_person(body: PersonIn, u=Depends(get_user)):
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    temp = secrets.token_urlsafe(8)
+    with closing(db()) as c:
+        try:
+            c.execute("INSERT INTO users(email,password_hash,role,client_id,must_change_pw) VALUES(?,?,?,?,1)",
+                      (body.email.lower(), pwd.hash(temp), "client", cid)); c.commit()
+        except sqlite3.IntegrityError:
+            raise HTTPException(400, "A login with that email already exists")
+    return {"email": body.email, "temp_password": temp}
+
+@app.post("/api/portal/people/{uid}/delete")
+def portal_remove_person(uid: int, u=Depends(get_user)):
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    if uid == u["id"]:
+        raise HTTPException(400, "You can’t remove your own login.")
+    with closing(db()) as c:
+        r = c.execute("SELECT id FROM users WHERE id=? AND client_id=?", (uid, cid)).fetchone()
+        if not r:
+            raise HTTPException(404, "Not found")
+        c.execute("DELETE FROM users WHERE id=?", (uid,)); c.commit()
+    return {"ok": True}
+
+@app.get("/api/portal/images")
+def portal_images(u=Depends(get_user)):
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    d = os.path.join(UPLOAD_DIR, str(cid)); out = []
+    if os.path.isdir(d):
+        for fn in sorted(os.listdir(d)):
+            if fn.lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".webp")):
+                out.append({"name": fn, "url": f"/uploads/{cid}/{fn}"})
+    return out
+
+class FlagIn(BaseModel):
+    url: str
+
+@app.post("/api/portal/images/flag")
+def portal_flag_image(body: FlagIn, background: BackgroundTasks, u=Depends(get_user)):
+    cid = u.get("client_id")
+    if not cid:
+        raise HTTPException(403, "No client attached to this login")
+    with closing(db()) as c:
+        c.execute("INSERT INTO submissions(client_id,author_email,kind,message,files_json) VALUES(?,?,?,?,?)",
+                  (cid, u["email"], "image-removal", body.url, json.dumps([body.url])))
+        cl = c.execute("SELECT name FROM clients WHERE id=?", (cid,)).fetchone(); c.commit()
+    if ADMIN_EMAIL:
+        background.add_task(send_email, ADMIN_EMAIL, f"Image flagged for removal — {cl['name'] if cl else cid}",
+                            f"{u['email']} flagged this image for removal:\n{body.url}", u["email"])
+    return {"ok": True}
+
 @app.get("/api/clients/{cid}/submissions")
 def list_submissions(cid: int, _=Depends(require_admin)):
     with closing(db()) as c:

@@ -1,21 +1,21 @@
 import { useState } from 'react'
 import ReviewStage from './ReviewStage.jsx'
+import AccountTab from './AccountTab.jsx'
 import PlanTab from './PlanTab.jsx'
 import ImagesTab from './ImagesTab.jsx'
 import RequestChangesTab from './RequestChangesTab.jsx'
-import BillingTab from './BillingTab.jsx'
 
 const TABS = [
+  ['account', 'Account'],
   ['plan', 'Marketing plan'],
   ['images', 'Images'],
   ['changes', 'Request changes'],
-  ['billing', 'Billing'],
 ]
 const LIVE = ['live', 'maintenance', 'cancelling']
 
 // Stage-driven client portal body. Used by the real client (ClientDashboard) and the admin Preview.
 export default function PortalBody({ client, preview = false, onApprove }) {
-  const [tab, setTab] = useState('plan')
+  const [tab, setTab] = useState('account')
   const status = client?.status || 'intake'
 
   if (status === 'cancelled') {
@@ -43,10 +43,10 @@ export default function PortalBody({ client, preview = false, onApprove }) {
           <button key={k} className={`tab ${tab === k ? 'tab-on' : ''}`} onClick={() => setTab(k)}>{label}</button>
         ))}
       </div>
-      {tab === 'plan' && <PlanTab client={client} preview={preview} />}
+      {tab === 'account' && <AccountTab client={client} preview={preview} />}
+      {tab === 'plan' && <PlanTab client={client} />}
       {tab === 'images' && <ImagesTab preview={preview} />}
       {tab === 'changes' && <RequestChangesTab preview={preview} />}
-      {tab === 'billing' && <BillingTab client={client} preview={preview} />}
     </>
   )
 }

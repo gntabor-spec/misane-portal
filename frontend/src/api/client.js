@@ -50,6 +50,13 @@ export const api = {
   adminOverview: () => req('/api/admin/overview'),
   getBilling: () => req('/api/portal/billing'),
   billingPortal: () => req('/api/portal/billing-portal', { method: 'POST' }),
+  updateProfile: (b) => req('/api/portal/profile', { method: 'POST', body: JSON.stringify(b) }),
+  changePassword: (pw) => req('/api/portal/password', { method: 'POST', body: JSON.stringify({ new_password: pw }) }),
+  getPeople: () => req('/api/portal/people'),
+  addPerson: (email) => req('/api/portal/people', { method: 'POST', body: JSON.stringify({ email }) }),
+  removePerson: (uid) => req(`/api/portal/people/${uid}/delete`, { method: 'POST' }),
+  getImages: () => req('/api/portal/images'),
+  flagImage: (url) => req('/api/portal/images/flag', { method: 'POST', body: JSON.stringify({ url }) }),
   publicSignup: (formData) => reqForm('/api/public/signup', formData),
   publicContact: (b) => req('/api/public/contact', { method: 'POST', body: JSON.stringify(b) }),
 }

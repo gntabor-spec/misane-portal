@@ -1,20 +1,10 @@
 import CommissionCard from './CommissionCard.jsx'
 
-// Marketing Plan tab. The full plan opens as its OWN page (no nested iframe / scrollbars).
-export default function PlanTab({ client, onApprove }) {
+// Marketing Plan tab (live stage). The full plan opens as its OWN page (no nested iframe).
+export default function PlanTab({ client }) {
   const c = client
   return (
     <div>
-      {c?.status === 'preview' && (
-        <div className="card" style={{ marginTop: 16, background: 'var(--navy)', color: '#e7ebf6', border: 'none' }}>
-          <h3 style={{ color: '#fff', marginBottom: 6 }}>Your draft is ready to review.</h3>
-          <p style={{ color: '#cfd6ea', marginBottom: 14 }}>
-            Open your plan, and when you’re happy with it, approve to continue to the $500 build fee and take your site live.
-          </p>
-          <button className="btn btn-gold" onClick={onApprove}>Approve &amp; continue to $500</button>
-        </div>
-      )}
-
       {c?.plan_embed_url ? (
         <div className="card" style={{ marginTop: 16 }}>
           <h3 style={{ marginBottom: 6 }}>Your marketing plan is ready</h3>

@@ -21,7 +21,7 @@ export default function ClientDetail() {
         name: d.name || '', email: d.email || '', phone: d.phone || '',
         property_address: d.property_address || '', domain: d.domain || '',
         scenario: d.scenario || 'fsbo', commission_pct: d.commission_pct || '',
-        plan_embed_url: d.plan_embed_url || '',
+        plan_embed_url: d.plan_embed_url || '', draft_url: d.draft_url || '',
       })
     } catch (e) { setErr(e.message) }
   }
@@ -61,6 +61,8 @@ export default function ClientDetail() {
         <label style={{ marginTop: 12 }}>Phone</label><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         <label style={{ marginTop: 12 }}>Property address</label><input value={form.property_address} onChange={(e) => setForm({ ...form, property_address: e.target.value })} />
         <label style={{ marginTop: 12 }}>Domain</label><input value={form.domain} onChange={(e) => setForm({ ...form, domain: e.target.value })} placeholder="3545uniformst.com" />
+        <label style={{ marginTop: 12 }}>Draft site URL <span className="muted" style={{ fontWeight: 400 }}>— shown on the Review stage (set status to "preview")</span></label>
+        <input value={form.draft_url} onChange={(e) => setForm({ ...form, draft_url: e.target.value })} placeholder="https://draft.3545uniformst.com or a staging link" />
         <label style={{ marginTop: 12 }}>Buyer-agent commission % <span className="muted" style={{ fontWeight: 400 }}>— the owner can also set this in their portal</span></label>
         <input value={form.commission_pct} onChange={(e) => setForm({ ...form, commission_pct: e.target.value })} placeholder="e.g. 2.5%" />
         <label style={{ marginTop: 12 }}>Published plan URL <span className="muted" style={{ fontWeight: 400 }}>— the produced plan shown in their portal</span></label>

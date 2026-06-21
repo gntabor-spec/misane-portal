@@ -104,7 +104,7 @@ def init_db():
                           (admin_email, pwd.hash(admin_pw), "admin"))
         # migrate existing DBs: add new columns if missing
         existing = [r[1] for r in c.execute("PRAGMA table_info(clients)").fetchall()]
-        for col in ("email", "phone", "plan_draft", "plan_published", "property_type", "plan_embed_url"):
+        for col in ("email", "phone", "plan_draft", "plan_published", "property_type", "plan_embed_url", "draft_url"):
             if col not in existing:
                 c.execute(f"ALTER TABLE clients ADD COLUMN {col} TEXT")
         c.commit()
@@ -128,7 +128,13 @@ def get_user(authorization: str = Header(default="")):
         u = c.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
     if not u:
         raise HTTPException(401, "User not found")
-    return dict(u)
+    u = dict(u)
+    if u.get("client_id"):
+        with closing(db()) as c:
+            cl = c.execute("SELECT status FROM clients WHERE id=?", (u["client_id"],)).fetchone()
+        if cl and cl["status"] == "cancelled":
+            raise HTTPException(403, "Your plan has ended and portal access is closed.")
+    return u
 
 def require_admin(u=Depends(get_user)):
     if u["role"] != "admin":
@@ -194,6 +200,7 @@ class ClientUpdate(BaseModel):
     scenario: str | None = None
     commission_pct: str | None = None
     plan_embed_url: str | None = None     # hosted plan page shown in the client's Marketing Plan tab
+    draft_url: str | None = None          # staging URL of the draft site, for stage-2 review
 class StatusIn(BaseModel):
     status: str
 class PlanIn(BaseModel):
@@ -224,6 +231,11 @@ def login(body: LoginIn):
         u = c.execute("SELECT * FROM users WHERE email=?", (body.email.lower(),)).fetchone()
     if not u or not pwd.verify(body.password, u["password_hash"]):
         raise HTTPException(401, "Invalid email or password")
+    if u["client_id"]:
+        with closing(db()) as c:
+            cl = c.execute("SELECT status FROM clients WHERE id=?", (u["client_id"],)).fetchone()
+        if cl and cl["status"] == "cancelled":
+            raise HTTPException(403, "Your plan has ended and portal access is closed.")
     return {"token": make_token(u["id"], u["role"]), "role": u["role"], "must_change_pw": bool(u["must_change_pw"])}
 
 @app.get("/api/auth/me")

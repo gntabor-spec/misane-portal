@@ -9,7 +9,7 @@ export default function SignupThanks() {
       <div className="kicker">You’re in</div>
       <h1 style={{ marginTop: 6 }}>Thanks — we’ve got everything we need to start.</h1>
       <p style={{ marginTop: 10, fontSize: 18 }}>
-        Your $100 deposit is in and your property is in our queue. We’ll start building your draft site and
+        Your $99 deposit is in and your property is in our queue. We’ll start building your draft site and
         email you a portal login as soon as it’s ready to review.
       </p>
       <div className="card" style={{ marginTop: 20 }}>

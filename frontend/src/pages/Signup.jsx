@@ -21,13 +21,13 @@ const TERMS = `Misane Properties LLC — Service Terms (summary)
 
 4. Domain & materials. Misane registers and owns the marketing domain and the website it creates. Your plan grants you a license to use the site and materials while your plan is active; they remain Misane's property.
 
-5. Fees & billing. The $100 startup fee initiates your draft and is non-refundable. The $500 approval fee covers the first three months and is non-refundable once work proceeds. After three months, service continues at $59/month (including up to two site updates per month), billed automatically, for up to 12 months total. You may cancel anytime after the first three months; cancellation stops future billing and ends your site and access.
+5. Fees & billing. The $99 startup fee initiates your draft and is non-refundable. The $499 approval fee covers the first three months and is non-refundable once work proceeds. After three months, service continues at $59/month (including up to two site updates per month), billed automatically, for up to 12 months total. You may cancel anytime after the first three months; cancellation stops future billing and ends your site and access.
 
 6. Listed properties. Where a property is listed with an agent, Misane augments the agent and routes inquiries accordingly and does not interfere with your agency relationship.
 
 7. Limitation of liability. To the fullest extent permitted by law, Misane's total liability is limited to the fees paid in the prior three months, and Misane is not liable for indirect or consequential damages.
 
-8. Governing law: State of Minnesota.`
+8. Governing law: Commonwealth of Kentucky.`
 
 const EMPTY = {
   firstName: '', lastName: '', email: '', phone: '',
@@ -228,6 +228,9 @@ export default function Signup() {
         <div className="card" style={{ marginTop: 16 }}>
           <h3 style={{ marginBottom: 14 }}>How it works</h3>
           <ProcessSteps />
+          <p style={{ marginTop: 14 }}>
+            <a href="https://misaneproperties.com/sample-plan.html" target="_blank" rel="noopener" style={{ color: 'var(--brass)', fontWeight: 600 }}>See a sample marketing plan ↗</a>
+          </p>
         </div>
 
         {/* Terms */}
@@ -244,7 +247,7 @@ export default function Signup() {
 
         {err && <div className="error">{err}</div>}
         <button className="btn btn-navy" style={{ marginTop: 18, width: '100%', padding: 15, fontSize: 16 }} disabled={busy}>
-          {busy ? 'Submitting…' : 'Kick the project off — $100'}
+          {busy ? 'Submitting…' : 'Kick the project off — $99'}
         </button>
       </form>
 

@@ -760,7 +760,7 @@ def checkout_approval(cid: int, u=Depends(get_user)):
     cust = _ensure_customer(cl)
     s = stripe.checkout.Session.create(
         mode="payment", customer=cust,
-        line_items=[{"price_data": {"currency": "usd", "unit_amount": 50000,
+        line_items=[{"price_data": {"currency": "usd", "unit_amount": 49900,
                      "product_data": {"name": "Misane Properties — Build approval (first 3 months)"}}, "quantity": 1}],
         payment_intent_data={"setup_future_usage": "off_session"},   # save card for the subscription
         success_url=f"{APP_URL}/portal?paid=approval", cancel_url=f"{APP_URL}/portal",

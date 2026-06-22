@@ -31,7 +31,7 @@ export default function PeopleCard({ preview }) {
       <p className="muted" style={{ marginBottom: 12 }}>Add family or a co-owner — they get their own login and notifications.</p>
       {invite && (
         <div className="card" style={{ background: 'var(--greige)', marginBottom: 12 }}>
-          Login created — send these: <b>{invite.email}</b> · temp password <b>{invite.temp_password}</b>
+          Login created &amp; emailed to <b>{invite.email}</b>. <span className="muted">(Backup — temp password: <b>{invite.temp_password}</b>)</span>
           <button className="btn btn-line" style={{ marginLeft: 12 }} onClick={() => setInvite(null)}>Dismiss</button>
         </div>
       )}

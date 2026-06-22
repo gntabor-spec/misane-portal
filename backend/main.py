@@ -170,6 +170,25 @@ def send_email(to, subject, body, reply_to=None):
         print(f"[email error] {e}")
         return False
 
+def _send_invite(email, temp):
+    login = os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com") + "/login"
+    body = (
+        "Welcome to Misane Properties — your property's marketing portal is ready.\n\n"
+        "This is your home base for getting your property sold. Once you sign in you can:\n"
+        "  -  See your full marketing plan — where to list, ready-to-post copy, and your downloadable brochures\n"
+        "  -  Add or update photos and video anytime\n"
+        "  -  Request changes to your site\n"
+        "  -  Manage your account and billing\n\n"
+        "Here's how to get in:\n"
+        f"  Link:                 {login}\n"
+        f"  Email:                {email}\n"
+        f"  Temporary password:   {temp}\n\n"
+        "For your security, you'll be asked to set your own password the first time you sign in.\n\n"
+        "Questions? Just reply to this email, or reach us at greg@misaneproperties.com.\n\n"
+        "We're glad you're here.\n— Misane Properties"
+    )
+    send_email(email, "Welcome to your Misane Properties portal", body)
+
 def client_contact_emails(cid):
     """Everyone who should hear about this client: all their logins + the client email field."""
     with closing(db()) as c:
@@ -240,7 +259,7 @@ def login(body: LoginIn):
 
 @app.get("/api/auth/me")
 def me(u=Depends(get_user)):
-    out = {"id": u["id"], "email": u["email"], "role": u["role"], "client_id": u["client_id"]}
+    out = {"id": u["id"], "email": u["email"], "role": u["role"], "client_id": u["client_id"], "must_change_pw": bool(u.get("must_change_pw"))}
     if u["client_id"]:
         with closing(db()) as c:
             cl = c.execute("SELECT * FROM clients WHERE id=?", (u["client_id"],)).fetchone()
@@ -359,8 +378,8 @@ def set_status(cid: int, body: StatusIn, _=Depends(require_admin)):
     return {"ok": True, "status": body.status}
 
 @app.post("/api/clients/{cid}/invite")
-def invite_client(cid: int, email: EmailStr, _=Depends(require_admin)):
-    """Create a client login with a temporary password (returned once for Greg to send)."""
+def invite_client(cid: int, email: EmailStr, background: BackgroundTasks, _=Depends(require_admin)):
+    """Create a client login, auto-email the credentials, and return them as a fallback."""
     temp = secrets.token_urlsafe(8)
     with closing(db()) as c:
         if not c.execute("SELECT id FROM clients WHERE id=?", (cid,)).fetchone():
@@ -371,7 +390,8 @@ def invite_client(cid: int, email: EmailStr, _=Depends(require_admin)):
             c.commit()
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A login with that email already exists")
-    return {"email": email, "temp_password": temp,
+    background.add_task(_send_invite, str(email), temp)
+    return {"email": email, "temp_password": temp, "emailed": True,
             "login_url": os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com") + "/login"}
 
 @app.get("/api/clients/{cid}/users")
@@ -492,7 +512,7 @@ class PersonIn(BaseModel):
     email: EmailStr
 
 @app.post("/api/portal/people")
-def portal_add_person(body: PersonIn, u=Depends(get_user)):
+def portal_add_person(body: PersonIn, background: BackgroundTasks, u=Depends(get_user)):
     cid = u.get("client_id")
     if not cid:
         raise HTTPException(403, "No client attached to this login")
@@ -503,7 +523,8 @@ def portal_add_person(body: PersonIn, u=Depends(get_user)):
                       (body.email.lower(), pwd.hash(temp), "client", cid)); c.commit()
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A login with that email already exists")
-    return {"email": body.email, "temp_password": temp}
+    background.add_task(_send_invite, str(body.email), temp)
+    return {"email": body.email, "temp_password": temp, "emailed": True}
 
 @app.post("/api/portal/people/{uid}/delete")
 def portal_remove_person(uid: int, u=Depends(get_user)):

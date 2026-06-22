@@ -34,7 +34,7 @@ export default function ClientContacts({ cid }) {
       {err && <div className="error">{err}</div>}
       {invite && (
         <div className="card" style={{ background: 'var(--greige)', marginBottom: 12 }}>
-          Login created — send these to them: <b>{invite.email}</b> &middot; temp password <b>{invite.temp_password}</b>
+          Login created &amp; emailed to <b>{invite.email}</b>. <span className="muted">(Backup — temp password: <b>{invite.temp_password}</b>)</span>
           <button className="btn btn-line" style={{ marginLeft: 12 }} onClick={() => setInvite(null)}>Dismiss</button>
         </div>
       )}

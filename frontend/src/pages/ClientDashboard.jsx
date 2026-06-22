@@ -1,12 +1,15 @@
 import { useAuth } from '../context/AuthContext.jsx'
 import { api } from '../api/client.js'
 import PortalBody from '../components/PortalBody.jsx'
+import ForcePassword from '../components/ForcePassword.jsx'
 
 const LIVE = ['live', 'maintenance', 'cancelling']
 
 export default function ClientDashboard() {
   const { user, logout } = useAuth()
   const c = user?.client
+
+  if (user?.must_change_pw) return <ForcePassword />
 
   async function approve() {
     if (!confirm('Approve your draft and continue to the $500 build fee?')) return

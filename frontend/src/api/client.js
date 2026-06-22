@@ -44,6 +44,7 @@ export const api = {
   updateClient: (cid, body) => req(`/api/clients/${cid}/update`, { method: 'POST', body: JSON.stringify(body) }),
   listClientUsers: (cid) => req(`/api/clients/${cid}/users`),
   removeClientUser: (cid, uid) => req(`/api/clients/${cid}/users/${uid}/delete`, { method: 'POST' }),
+  resendInvite: (cid, uid) => req(`/api/clients/${cid}/users/${uid}/resend`, { method: 'POST' }),
   submitUpdate: (formData) => reqForm('/api/portal/submissions', formData),
   setCommission: (pct) => req('/api/portal/commission', { method: 'POST', body: JSON.stringify({ commission_pct: pct }) }),
   listSubmissions: (cid) => req(`/api/clients/${cid}/submissions`),

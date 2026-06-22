@@ -462,6 +462,20 @@ def remove_client_user(cid: int, uid: int, _=Depends(require_admin)):
         c.commit()
     return {"ok": True}
 
+@app.post("/api/clients/{cid}/users/{uid}/resend")
+def resend_invite(cid: int, uid: int, background: BackgroundTasks, _=Depends(require_admin)):
+    """Reset a login to a fresh temp password and re-send the branded welcome email."""
+    temp = secrets.token_urlsafe(8)
+    with closing(db()) as c:
+        u = c.execute("SELECT email FROM users WHERE id=? AND client_id=?", (uid, cid)).fetchone()
+        if not u:
+            raise HTTPException(404, "Login not found for this client")
+        cl = c.execute("SELECT name, property_address FROM clients WHERE id=?", (cid,)).fetchone()
+        c.execute("UPDATE users SET password_hash=?, must_change_pw=1 WHERE id=?", (pwd.hash(temp), uid))
+        c.commit()
+    background.add_task(_send_invite, u["email"], temp, (cl["property_address"] or cl["name"]) if cl else None)
+    return {"ok": True, "email": u["email"], "temp_password": temp, "emailed": True}
+
 # ---- Update tab: owner submits photos/videos + new content / feedback ----
 @app.post("/api/portal/submissions")
 async def create_submission(

@@ -21,6 +21,9 @@ export default function ClientContacts({ cid }) {
     if (!confirm(`Remove login ${email}? They lose access and notifications.`)) return
     try { await api.removeClientUser(cid, uid); load() } catch (ex) { alert(ex.message) }
   }
+  async function resend(uid) {
+    try { setInvite(await api.resendInvite(cid, uid)); load() } catch (ex) { alert(ex.message) }
+  }
 
   return (
     <div className="card" style={{ marginTop: 16, maxWidth: 720 }}>
@@ -47,7 +50,8 @@ export default function ClientContacts({ cid }) {
               <tr key={u.id} style={{ borderBottom: '1px solid var(--hairline)' }}>
                 <td style={{ padding: '8px 0' }}>{u.email}</td>
                 <td className="muted">{u.must_change_pw ? 'invited' : 'active'}</td>
-                <td style={{ textAlign: 'right' }}>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <button className="btn btn-line" onClick={() => resend(u.id)}>Resend welcome</button>{' '}
                   <button className="btn btn-line" style={{ color: 'var(--danger)' }} onClick={() => remove(u.id, u.email)}>Remove</button>
                 </td>
               </tr>

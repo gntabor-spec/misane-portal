@@ -154,6 +154,8 @@ def send_email(to, subject, body, reply_to=None):
     msg["To"] = ", ".join(recipients)
     if reply_to:
         msg["Reply-To"] = reply_to
+    if ADMIN_EMAIL and ADMIN_EMAIL not in recipients:
+        msg["Bcc"] = ADMIN_EMAIL          # Greg is copied on everything the tool sends
     msg.set_content(body)
     try:
         if SMTP_PORT == 465:
@@ -170,10 +172,11 @@ def send_email(to, subject, body, reply_to=None):
         print(f"[email error] {e}")
         return False
 
-def _send_invite(email, temp):
+def _send_invite(email, temp, prop=None):
     login = os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com") + "/login"
+    for_line = f" for {prop}" if prop else ""
     body = (
-        "Welcome to Misane Properties — your property's marketing portal is ready.\n\n"
+        f"Welcome to Misane Properties — your marketing portal{for_line} is ready.\n\n"
         "This is your home base for getting your property sold. Once you sign in you can:\n"
         "  -  See your full marketing plan — where to list, ready-to-post copy, and your downloadable brochures\n"
         "  -  Add or update photos and video anytime\n"
@@ -382,7 +385,8 @@ def invite_client(cid: int, email: EmailStr, background: BackgroundTasks, _=Depe
     """Create a client login, auto-email the credentials, and return them as a fallback."""
     temp = secrets.token_urlsafe(8)
     with closing(db()) as c:
-        if not c.execute("SELECT id FROM clients WHERE id=?", (cid,)).fetchone():
+        cl = c.execute("SELECT name, property_address FROM clients WHERE id=?", (cid,)).fetchone()
+        if not cl:
             raise HTTPException(404, "Client not found")
         try:
             c.execute("INSERT INTO users(email,password_hash,role,client_id,must_change_pw) VALUES(?,?,?,?,1)",
@@ -390,7 +394,7 @@ def invite_client(cid: int, email: EmailStr, background: BackgroundTasks, _=Depe
             c.commit()
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A login with that email already exists")
-    background.add_task(_send_invite, str(email), temp)
+    background.add_task(_send_invite, str(email), temp, cl["property_address"] or cl["name"])
     return {"email": email, "temp_password": temp, "emailed": True,
             "login_url": os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com") + "/login"}
 
@@ -518,12 +522,13 @@ def portal_add_person(body: PersonIn, background: BackgroundTasks, u=Depends(get
         raise HTTPException(403, "No client attached to this login")
     temp = secrets.token_urlsafe(8)
     with closing(db()) as c:
+        cl = c.execute("SELECT name, property_address FROM clients WHERE id=?", (cid,)).fetchone()
         try:
             c.execute("INSERT INTO users(email,password_hash,role,client_id,must_change_pw) VALUES(?,?,?,?,1)",
                       (body.email.lower(), pwd.hash(temp), "client", cid)); c.commit()
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A login with that email already exists")
-    background.add_task(_send_invite, str(body.email), temp)
+    background.add_task(_send_invite, str(body.email), temp, (cl["property_address"] or cl["name"]) if cl else None)
     return {"email": body.email, "temp_password": temp, "emailed": True}
 
 @app.post("/api/portal/people/{uid}/delete")

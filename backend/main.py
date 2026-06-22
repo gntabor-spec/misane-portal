@@ -142,7 +142,7 @@ def require_admin(u=Depends(get_user)):
     return u
 
 # ---- email + notifications ----
-def send_email(to, subject, body, reply_to=None):
+def send_email(to, subject, body, reply_to=None, html=None):
     recipients = [to] if isinstance(to, str) else list(to)
     recipients = [r for r in dict.fromkeys(recipients) if r]   # dedupe, drop blanks
     if not recipients or not SMTP_HOST:
@@ -156,7 +156,9 @@ def send_email(to, subject, body, reply_to=None):
         msg["Reply-To"] = reply_to
     if ADMIN_EMAIL and ADMIN_EMAIL not in recipients:
         msg["Bcc"] = ADMIN_EMAIL          # Greg is copied on everything the tool sends
-    msg.set_content(body)
+    msg.set_content(body)                 # plain-text fallback
+    if html:
+        msg.add_alternative(html, subtype="html")
     try:
         if SMTP_PORT == 465:
             srv = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=20)
@@ -171,6 +173,31 @@ def send_email(to, subject, body, reply_to=None):
     except Exception as e:
         print(f"[email error] {e}")
         return False
+
+def _esc(s):
+    return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+def _email_shell(heading, body_html, button=None):
+    """Branded HTML email — paper bg, white card, logo header, navy footer, optional brass button."""
+    logo = "https://misaneproperties.com/assets/logo-horizontal.png"
+    btn = ""
+    if button:
+        btn = (f'<p style="margin:24px 0 4px"><a href="{button[1]}" style="display:inline-block;background:#0B1A48;'
+               f'color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-weight:bold;'
+               f'font-size:15px;padding:13px 28px;border-radius:6px">{button[0]}</a></p>')
+    return (
+        '<!DOCTYPE html><html><body style="margin:0;background:#FAF8F3">'
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FAF8F3;font-family:Arial,Helvetica,sans-serif">'
+        '<tr><td align="center" style="padding:28px 14px">'
+        '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #E0D9CC;border-radius:14px;overflow:hidden">'
+        '<tr><td style="padding:20px 28px;border-bottom:1px solid #E0D9CC"><img src="' + logo + '" alt="Misane Properties" height="32" style="display:block;height:32px"></td></tr>'
+        '<tr><td style="padding:28px 28px 30px;color:#43474E;font-size:15px;line-height:1.6">'
+        '<h1 style="font-family:Georgia,serif;color:#14224F;font-size:23px;font-weight:normal;margin:0 0 16px">' + heading + '</h1>'
+        + body_html + btn +
+        '</td></tr>'
+        '<tr><td style="background:#0B1A48;padding:16px 28px"><span style="color:#9fa9c6;font-size:12px;font-family:Arial,Helvetica,sans-serif">&copy; Misane Properties LLC &nbsp;&middot;&nbsp; <a href="https://misaneproperties.com" style="color:#D8A24E;text-decoration:none">misaneproperties.com</a></span></td></tr>'
+        '</table></td></tr></table></body></html>'
+    )
 
 def _send_invite(email, temp, prop=None):
     login = os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com") + "/login"
@@ -190,7 +217,22 @@ def _send_invite(email, temp, prop=None):
         "Questions? Just reply to this email, or reach us at greg@misaneproperties.com.\n\n"
         "We're glad you're here.\n— Misane Properties"
     )
-    send_email(email, "Welcome to your Misane Properties portal", body)
+    creds = ('<table role="presentation" cellpadding="0" cellspacing="0" style="background:#F0EBE0;border-radius:8px">'
+             '<tr><td style="padding:14px 18px;font-size:14px;color:#14224F;line-height:1.9">'
+             f'<b>Email:</b> {_esc(email)}<br><b>Temporary password:</b> {_esc(temp)}</td></tr></table>')
+    body_html = (
+        f'<p style="margin:0 0 12px">Your marketing portal{_esc(for_line)} is ready — your home base for getting your property sold.</p>'
+        '<p style="margin:0 0 8px">Once you sign in you can:</p>'
+        '<ul style="margin:0 0 14px;padding-left:20px">'
+        '<li>See your full marketing plan — where to list, ready-to-post copy, and downloadable brochures</li>'
+        '<li>Add or update photos and video anytime</li>'
+        '<li>Request changes to your site</li>'
+        '<li>Manage your account and billing</li></ul>'
+        + creds +
+        '<p style="margin:16px 0 0;font-size:13px;color:#5C6068">For your security, you&rsquo;ll set your own password the first time you sign in. Questions? Just reply to this email.</p>'
+    )
+    html = _email_shell("Welcome to Misane Properties", body_html, button=("Sign in to your portal", login))
+    send_email(email, "Welcome to your Misane Properties portal", body, html=html)
 
 def client_contact_emails(cid):
     """Everyone who should hear about this client: all their logins + the client email field."""
@@ -354,7 +396,10 @@ def publish_plan(cid: int, background: BackgroundTasks, _=Depends(require_admin)
         login = os.environ.get("MISANE_APP_URL", "https://app.misaneproperties.com") + "/login"
         body = (f"Good news — your Misane Properties marketing plan for {r['name']} has been "
                 f"updated and is ready to view.\n\nLog in to your portal: {login}\n\n— Misane Properties")
-        background.add_task(send_email, recipients, "Your marketing plan is ready to view", body)
+        body_html = (f'<p style="margin:0 0 12px">Good news — your marketing plan for <b>{_esc(r["name"])}</b> has been updated and is ready to view.</p>'
+                     '<p style="margin:0">Open your portal to see your plan and what to do next.</p>')
+        html = _email_shell("Your marketing plan is ready", body_html, button=("View your plan", login))
+        background.add_task(send_email, recipients, "Your marketing plan is ready to view", body, html=html)
     return {"ok": True}
 
 @app.post("/api/clients/{cid}/delete")
@@ -619,7 +664,17 @@ def public_contact(body: ContactIn, background: BackgroundTasks):
     text = (f"New inquiry from your property site {dom}:\n\n"
             f"Name:  {body.name}\nEmail: {body.email}\nPhone: {body.phone or '—'}\n\n"
             f"Message:\n{body.message}\n\nReply directly to this email to reach them.\n— Misane Properties")
-    background.add_task(send_email, recipients, f"New inquiry on {dom} — {body.name}", text, body.email)
+    det = ('<table role="presentation" cellpadding="0" cellspacing="0" style="background:#F0EBE0;border-radius:8px">'
+           '<tr><td style="padding:14px 18px;font-size:14px;color:#14224F;line-height:1.9">'
+           f'<b>Name:</b> {_esc(body.name)}<br><b>Email:</b> <a href="mailto:{_esc(body.email)}" style="color:#B7843C">{_esc(body.email)}</a>'
+           f'<br><b>Phone:</b> {_esc(body.phone) or "&mdash;"}</td></tr></table>')
+    body_html = (f'<p style="margin:0 0 12px">You have a new inquiry from your property site <b>{_esc(dom)}</b>.</p>'
+                 + det +
+                 '<p style="margin:16px 0 4px"><b>Message</b></p>'
+                 f'<p style="margin:0;white-space:pre-wrap">{_esc(body.message)}</p>'
+                 '<p style="margin:16px 0 0;font-size:13px;color:#5C6068">Reply directly to this email to reach them.</p>')
+    html = _email_shell(f"New inquiry on {dom}", body_html)
+    background.add_task(send_email, recipients, f"New inquiry on {dom} — {body.name}", text, body.email, html=html)
     return {"ok": True}
 
 @app.get("/api/public/commission")

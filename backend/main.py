@@ -107,9 +107,16 @@ def init_db():
         for col in ("email", "phone", "plan_draft", "plan_published", "property_type", "plan_embed_url", "draft_url"):
             if col not in existing:
                 c.execute(f"ALTER TABLE clients ADD COLUMN {col} TEXT")
+        existing_u = [r[1] for r in c.execute("PRAGMA table_info(users)").fetchall()]
+        for col in ("invited_at", "last_login"):
+            if col not in existing_u:
+                c.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT")
         c.commit()
 
 # ---- auth helpers ----
+def _now():
+    return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+
 def make_token(uid:int, role:str):
     exp = datetime.datetime.utcnow() + datetime.timedelta(minutes=TOKEN_MINUTES)
     return jwt.encode({"sub": str(uid), "role": role, "exp": exp}, SECRET_KEY, algorithm=ALGO)
@@ -300,6 +307,8 @@ def login(body: LoginIn):
             cl = c.execute("SELECT status FROM clients WHERE id=?", (u["client_id"],)).fetchone()
         if cl and cl["status"] == "cancelled":
             raise HTTPException(403, "Your plan has ended and portal access is closed.")
+    with closing(db()) as c:
+        c.execute("UPDATE users SET last_login=? WHERE id=?", (_now(), u["id"])); c.commit()
     return {"token": make_token(u["id"], u["role"]), "role": u["role"], "must_change_pw": bool(u["must_change_pw"])}
 
 @app.get("/api/auth/me")
@@ -434,8 +443,8 @@ def invite_client(cid: int, email: EmailStr, background: BackgroundTasks, _=Depe
         if not cl:
             raise HTTPException(404, "Client not found")
         try:
-            c.execute("INSERT INTO users(email,password_hash,role,client_id,must_change_pw) VALUES(?,?,?,?,1)",
-                      (email.lower(), pwd.hash(temp), "client", cid))
+            c.execute("INSERT INTO users(email,password_hash,role,client_id,must_change_pw,invited_at) VALUES(?,?,?,?,1,?)",
+                      (email.lower(), pwd.hash(temp), "client", cid, _now()))
             c.commit()
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A login with that email already exists")
@@ -447,7 +456,7 @@ def invite_client(cid: int, email: EmailStr, background: BackgroundTasks, _=Depe
 def list_client_users(cid: int, _=Depends(require_admin)):
     with closing(db()) as c:
         rows = c.execute(
-            "SELECT id, email, must_change_pw, created_at FROM users WHERE client_id=? ORDER BY created_at",
+            "SELECT id, email, must_change_pw, invited_at, last_login FROM users WHERE client_id=? ORDER BY created_at",
             (cid,)).fetchall()
     return [dict(r) for r in rows]
 
@@ -471,7 +480,7 @@ def resend_invite(cid: int, uid: int, background: BackgroundTasks, _=Depends(req
         if not u:
             raise HTTPException(404, "Login not found for this client")
         cl = c.execute("SELECT name, property_address FROM clients WHERE id=?", (cid,)).fetchone()
-        c.execute("UPDATE users SET password_hash=?, must_change_pw=1 WHERE id=?", (pwd.hash(temp), uid))
+        c.execute("UPDATE users SET password_hash=?, must_change_pw=1, invited_at=? WHERE id=?", (pwd.hash(temp), _now(), uid))
         c.commit()
     background.add_task(_send_invite, u["email"], temp, (cl["property_address"] or cl["name"]) if cl else None)
     return {"ok": True, "email": u["email"], "temp_password": temp, "emailed": True}
@@ -568,7 +577,7 @@ def portal_people(u=Depends(get_user)):
     if not cid:
         raise HTTPException(403, "No client attached to this login")
     with closing(db()) as c:
-        rows = c.execute("SELECT id, email, must_change_pw FROM users WHERE client_id=? ORDER BY created_at", (cid,)).fetchall()
+        rows = c.execute("SELECT id, email, must_change_pw, invited_at, last_login FROM users WHERE client_id=? ORDER BY created_at", (cid,)).fetchall()
     return [dict(r) for r in rows]
 
 class PersonIn(BaseModel):
@@ -583,8 +592,8 @@ def portal_add_person(body: PersonIn, background: BackgroundTasks, u=Depends(get
     with closing(db()) as c:
         cl = c.execute("SELECT name, property_address FROM clients WHERE id=?", (cid,)).fetchone()
         try:
-            c.execute("INSERT INTO users(email,password_hash,role,client_id,must_change_pw) VALUES(?,?,?,?,1)",
-                      (body.email.lower(), pwd.hash(temp), "client", cid)); c.commit()
+            c.execute("INSERT INTO users(email,password_hash,role,client_id,must_change_pw,invited_at) VALUES(?,?,?,?,1,?)",
+                      (body.email.lower(), pwd.hash(temp), "client", cid, _now())); c.commit()
         except sqlite3.IntegrityError:
             raise HTTPException(400, "A login with that email already exists")
     background.add_task(_send_invite, str(body.email), temp, (cl["property_address"] or cl["name"]) if cl else None)

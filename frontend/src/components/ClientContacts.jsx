@@ -59,7 +59,12 @@ export default function ClientContacts({ cid, client }) {
           <tbody>
             {users.map((u) => (
               <tr key={u.id} style={{ borderBottom: '1px solid var(--hairline)' }}>
-                <td style={{ padding: '8px 0' }}>{u.email}</td>
+                <td style={{ padding: '8px 0' }}>
+                  {u.email}
+                  <div className="muted" style={{ fontSize: 12 }}>
+                    Invited {u.invited_at ? u.invited_at.slice(0, 10) : '—'} · {u.last_login ? 'last sign-in ' + u.last_login : 'never signed in'}
+                  </div>
+                </td>
                 <td className="muted">{u.must_change_pw ? 'invited' : 'active'}</td>
                 <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                   <button className="btn btn-line" onClick={() => resend(u.id)}>Resend welcome</button>{' '}

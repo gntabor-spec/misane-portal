@@ -45,7 +45,7 @@ export default function PortalBody({ client, preview = false, onApprove }) {
       </div>
       {tab === 'account' && <AccountTab client={client} preview={preview} />}
       {tab === 'plan' && <PlanTab client={client} />}
-      {tab === 'images' && <ImagesTab preview={preview} />}
+      {tab === 'images' && <ImagesTab preview={preview} client={client} />}
       {tab === 'changes' && <RequestChangesTab preview={preview} />}
     </>
   )

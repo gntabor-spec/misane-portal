@@ -4,7 +4,7 @@ import { api } from '../api/client.js'
 const API = import.meta.env.VITE_API_BASE || ''
 
 // Images tab — shows the photos they've sent, lets them flag any for removal, and add more.
-export default function ImagesTab({ preview }) {
+export default function ImagesTab({ preview, client }) {
   const [imgs, setImgs] = useState([])
   const [flagged, setFlagged] = useState({})
   const [files, setFiles] = useState([])
@@ -12,8 +12,11 @@ export default function ImagesTab({ preview }) {
   const [done, setDone] = useState(false)
   const [err, setErr] = useState('')
 
-  function load() { api.getImages().then(setImgs).catch((e) => setErr(e.message)) }
-  useEffect(() => { if (!preview) load() }, [preview])
+  function load() {
+    const p = (preview && client?.id) ? api.getClientImages(client.id) : api.getImages()
+    p.then(setImgs).catch((e) => setErr(e.message))
+  }
+  useEffect(() => { if (!preview || client?.id) load() }, [preview, client])
 
   async function flag(url) {
     if (preview) { alert('Preview only — interactive in the client’s login.'); return }
@@ -49,9 +52,7 @@ export default function ImagesTab({ preview }) {
         <p className="muted" style={{ marginBottom: 14 }}>
           These are the photos you’ve sent us. Flag any you’d like removed and we’ll take them down on the next update.
         </p>
-        {preview ? (
-          <p className="muted">The client’s photo library shows here.</p>
-        ) : imgs.length === 0 ? (
+        {imgs.length === 0 ? (
           <p className="muted">No photos uploaded yet — add some above.</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 12 }}>

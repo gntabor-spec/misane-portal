@@ -548,6 +548,16 @@ def portal_flag_image(body: FlagIn, background: BackgroundTasks, u=Depends(get_u
                             f"{u['email']} flagged this image for removal:\n{body.url}", u["email"])
     return {"ok": True}
 
+@app.get("/api/clients/{cid}/images")
+def admin_client_images(cid: int, _=Depends(require_admin)):
+    """Admin/preview: list a client's photo library by id."""
+    d = os.path.join(UPLOAD_DIR, str(cid)); out = []
+    if os.path.isdir(d):
+        for fn in sorted(os.listdir(d)):
+            if fn.lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".webp")):
+                out.append({"name": fn, "url": f"/uploads/{cid}/{fn}"})
+    return out
+
 @app.get("/api/clients/{cid}/submissions")
 def list_submissions(cid: int, _=Depends(require_admin)):
     with closing(db()) as c:

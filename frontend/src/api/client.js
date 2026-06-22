@@ -56,6 +56,7 @@ export const api = {
   addPerson: (email) => req('/api/portal/people', { method: 'POST', body: JSON.stringify({ email }) }),
   removePerson: (uid) => req(`/api/portal/people/${uid}/delete`, { method: 'POST' }),
   getImages: () => req('/api/portal/images'),
+  getClientImages: (cid) => req(`/api/clients/${cid}/images`),
   flagImage: (url) => req('/api/portal/images/flag', { method: 'POST', body: JSON.stringify({ url }) }),
   publicSignup: (formData) => reqForm('/api/public/signup', formData),
   publicContact: (b) => req('/api/public/contact', { method: 'POST', body: JSON.stringify(b) }),

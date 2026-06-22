@@ -52,7 +52,7 @@ export default function ClientDetail() {
         {c.phone ? <p style={{ marginTop: 4 }}><a href={`tel:${c.phone}`}>{c.phone}</a></p> : <p className="muted" style={{ marginTop: 4 }}>No phone on file</p>}
       </div>
 
-      <ClientContacts cid={id} />
+      <ClientContacts cid={id} client={c} />
 
       <form onSubmit={save} className="card" style={{ marginTop: 16, maxWidth: 720 }}>
         <h3 style={{ marginBottom: 14 }}>Contact &amp; details</h3>

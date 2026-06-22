@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 
 // Admin: manage who can log in to a client's portal (owner + family, e.g. Michael + Jenny).
-export default function ClientContacts({ cid }) {
+export default function ClientContacts({ cid, client }) {
   const [users, setUsers] = useState([])
   const [invite, setInvite] = useState(null)
   const [err, setErr] = useState('')
@@ -24,6 +24,11 @@ export default function ClientContacts({ cid }) {
   async function resend(uid) {
     try { setInvite(await api.resendInvite(cid, uid)); load() } catch (ex) { alert(ex.message) }
   }
+  async function addOwner() {
+    try { setInvite(await api.invite(cid, client.email)); load() } catch (ex) { alert(ex.message) }
+  }
+
+  const ownerHasLogin = client?.email && users.some((u) => (u.email || '').toLowerCase() === client.email.toLowerCase())
 
   return (
     <div className="card" style={{ marginTop: 16, maxWidth: 720 }}>
@@ -35,6 +40,12 @@ export default function ClientContacts({ cid }) {
         Everyone here can sign in, see the plan, send updates, and gets lead &amp; plan-update notifications.
       </p>
       {err && <div className="error">{err}</div>}
+      {client?.email && !ownerHasLogin && (
+        <div className="card" style={{ background: 'var(--greige)', marginBottom: 12 }}>
+          Owner email on file: <b>{client.email}</b>
+          <button className="btn btn-line" style={{ marginLeft: 12 }} onClick={addOwner}>Add login &amp; send welcome</button>
+        </div>
+      )}
       {invite && (
         <div className="card" style={{ background: 'var(--greige)', marginBottom: 12 }}>
           Login created &amp; emailed to <b>{invite.email}</b>. <span className="muted">(Backup — temp password: <b>{invite.temp_password}</b>)</span>
